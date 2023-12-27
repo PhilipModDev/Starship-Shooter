@@ -1,0 +1,18 @@
+{
+"com.badlogic.gdx.scenes.scene2d.ui.Button$ButtonStyle": {
+	"default": {
+		"up": "button",
+		"down": "down",
+		"over": "over",
+		"focused": "over"
+	}
+}
+	"TextButtonStyle":{
+		"default": {
+			"up": "button",
+			"down": "down",
+			"over": "over",
+			"focused": "over"
+		}
+	}
+}

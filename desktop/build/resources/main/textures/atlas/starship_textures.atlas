@@ -1,0 +1,11 @@
+starship_textures.png
+size:32,16
+repeat:none
+alien_starship
+bounds:11,10,12,5
+space_rock
+index:0
+bounds:11,1,8,8
+starship
+index:0
+bounds:1,4,9,11

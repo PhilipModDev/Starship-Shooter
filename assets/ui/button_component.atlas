@@ -1,0 +1,33 @@
+
+button_component.png
+size: 1024, 1024
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+button
+  rotate: false
+  xy: 1, 523
+  size: 445, 173
+  split: 26, 24, 26, 27
+  pad: 62, 38, 64, 46
+  orig: 445, 173
+  offset: 0, 0
+  index: -1
+down
+  rotate: false
+  xy: 1, 698
+  size: 459, 196
+  split: 26, 24, 26, 27
+  pad: 62, 38, 64, 46
+  orig: 459, 196
+  offset: 0, 0
+  index: -1
+over
+  rotate: false
+  xy: 462, 725
+  size: 434, 169
+  split: 26, 24, 26, 27
+  pad: 62, 38, 64, 46
+  orig: 434, 169
+  offset: 0, 0
+  index: -1
