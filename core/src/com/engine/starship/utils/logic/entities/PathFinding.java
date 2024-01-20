@@ -3,7 +3,10 @@ package com.engine.starship.utils.logic.entities;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.RandomXS128;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.bullet.collision._btMprSimplex_t;
 import com.engine.starship.StarshipShooter;
 import com.engine.starship.UniverseManager;
 import com.engine.starship.utils.math.Directions;
@@ -16,26 +19,26 @@ import java.util.Queue;
 
 public class PathFinding {
     //The max range distance for the path finding algorithm.
-    public static final int MAX_TRANSVERSAL_DISTANCE  = 15;
+    public static final int MAX_TRANSVERSAL_DISTANCE  = 20;
     public static final Directions[] DIRECTIONS = Directions.values();
     //Gets the universe class.
     private final UniverseManager universeManager = StarshipShooter.getInstance().universeManager;
     private Vector2 entityPos;
     private Vector2 playerPos;
-
     //Gets the path finding class.
     public ArrayList<Node> pathFindEntity(Entity entity) {
-        if (entity.isLiving) return null;
         Starship player = universeManager.getPlayer();
         Sprite sprite = entity.getSprite();
         //The circle detection range for the path finding.
-        Circle rangeCircle = new Circle(sprite.getX(), sprite.getY(), MAX_TRANSVERSAL_DISTANCE);
-        if (rangeCircle.contains(player.position)) {
+        Circle circle = new Circle(sprite.getX(), sprite.getY(), MAX_TRANSVERSAL_DISTANCE);
+        if (circle.contains(player.position)) {
+            circle.setRadius(0.2f);
+            circle.setPosition(sprite.getX() + sprite.getOriginX(),sprite.getY()+ sprite.getOriginY());
             //The start length to search from.
             //Creates the queue for the positions transversal.
             PriorityQueue<Node> queue = new PriorityQueue<>();
-            ArrayList<Node> path = new ArrayList<>();
             BitSet bitSet = new BitSet();
+            ArrayList<Node> path = new ArrayList<>();
             //Gets the entity's position.
             entityPos = entity.position;
             //Gets the player's position.
@@ -54,7 +57,8 @@ public class PathFinding {
                 float distance = currentNode.dst(goal);
                 Node nextNode = nearestPosToGoal(currentNode,goal);
                 nextNode.setIndex(currentNode.index + 1);
-                if (universeManager.isCollision(nextNode.x, nextNode.y)) continue;
+                circle.setPosition(nextNode.x, nextNode.y);
+                if (universeManager.isCollisionTest(circle)) continue;
                 if (!bitSet.get(nextNode.index) && nextNode.dst(goal) < distance){
                     bitSet.set(nextNode.index,true);
                     queue.add(nextNode);
@@ -63,7 +67,8 @@ public class PathFinding {
                 else {
                     for (Directions directions : DIRECTIONS) {
                         Node neighboringNode = getNodeAtNeighbor(nextNode,directions);
-                        if (universeManager.isCollision(neighboringNode.x, neighboringNode.y)) continue;
+                        circle.setPosition(neighboringNode.x, neighboringNode.y);
+                        if (universeManager.isCollisionTest(circle)) continue;
 
                         if (neighboringNode.equals(goal)){
                             queue.add(neighboringNode);
@@ -85,13 +90,16 @@ public class PathFinding {
         return null;
     }
 
+
     public ArrayList<Node> pathFindEntity2(Entity entity) {
         if (entity.isLiving) return null;
         Starship player = universeManager.getPlayer();
         Sprite sprite = entity.getSprite();
         //The circle detection range for the path finding.
-        Circle rangeCircle = new Circle(sprite.getX(), sprite.getY(), MAX_TRANSVERSAL_DISTANCE);
-        if (rangeCircle.contains(player.position)) {
+        Circle circle = new Circle(sprite.getX(), sprite.getY(), MAX_TRANSVERSAL_DISTANCE);
+        if (circle.contains(player.position)) {
+            circle.setRadius(0.5f);
+            circle.setPosition(sprite.getX() + sprite.getOriginX(),sprite.getY()+ sprite.getOriginY());
             //The start length to search from.
             //Gets the entity's position.
             entityPos = entity.position;
@@ -133,22 +141,22 @@ public class PathFinding {
         Node newNode = new Node();
 
         check.set(start.x + Directions.LEFT.value,start.y);
-        if (check.dst(goal) < distance && !universeManager.isCollision(check.x,check.y) || check.equals(goal)){
+        if (check.dst(goal) < distance  || check.equals(goal)){
             newNode.set(check);
             distance = check.dst(goal);
         }
         check.set(start.x + Directions.RIGHT.value,start.y);
-        if (check.dst(goal) < distance && !universeManager.isCollision(check.x,check.y) || check.equals(goal)){
+        if (check.dst(goal) < distance  || check.equals(goal)){
             newNode.set(check);
             distance = check.dst(goal);
         }
         check.set(start.x,start.y + Directions.UP.value);
-        if (check.dst(goal) < distance && !universeManager.isCollision(check.x,check.y) || check.equals(goal)){
+        if (check.dst(goal) < distance || check.equals(goal)){
             newNode.set(check);
             distance = check.dst(goal);
         }
         check.set(start.x,start.y + Directions.DOWN.value);
-        if (check.dst(goal) < distance && !universeManager.isCollision(check.x,check.y) || check.equals(goal)){
+        if (check.dst(goal) < distance || check.equals(goal)){
             newNode.set(check);
         }
         return newNode;

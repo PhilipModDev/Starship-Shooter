@@ -1,5 +1,6 @@
 package com.engine.starship.utils;
 
+
 public class Constants {
     //The world viewport sizes defined.
     public static final int VIEWPORT_WIDTH = 10;
@@ -14,5 +15,11 @@ public class Constants {
     public static final float TOUCH_MOVEMENT_SPEED = 0.5f;
     //Asset directories.
     public static final String TEXTURE_ATLAS = "textures/atlas/starship_textures.atlas";
-    public static final String FONTS_DIRECTORY = "ui/font";
+    public static final String SKIN_UI = "ui/skinUI_.json";
+    public static final String PIXEL_FONT = "ui/font/pixel.fnt";
+    public static final String PIXEL_FONT_LOCAL = "ui/font/pixel_local.fnt";
+    public static final String HINDI_FONT = "ui/font/hindi/hindi_fonts.fnt";
+    public static final String VIETNAMESE_FONT = "ui/font/vietnamese/vietnamese_fonts.fnt";
+    //Defines the application version.
+    public static final String VERSION = "v1.0.0";
 }

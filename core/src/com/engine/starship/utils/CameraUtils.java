@@ -27,14 +27,18 @@ public class CameraUtils extends OrthographicCamera {
 
     public void resizeViewport(float width,float height){
         viewport.update((int) width, (int) height,true);
-//        viewportWidth = ((float) Constants.VIEWPORT_HEIGHT / height) * width;
-//        update();
     }
 
 
     @Override
     public void update() {
         if (hasTarget()){
+            if (targetSprite.getX() + targetSprite.getWidth() > viewportWidth + 1){
+                targetSprite.setPosition(viewportWidth - 3,targetSprite.getY() + targetSprite.getOriginY());
+            }
+            if (targetSprite.getY() + targetSprite.getHeight() > viewportHeight + 1){
+                targetSprite.setPosition(targetSprite.getY() + targetSprite.getOriginY(),viewportHeight - 3);
+            }
             position.x = targetSprite.getX() + targetSprite.getOriginX();
             position.y = targetSprite.getY() + targetSprite.getOriginY();
         }
