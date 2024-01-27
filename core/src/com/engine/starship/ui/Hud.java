@@ -8,6 +8,9 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -19,10 +22,14 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.engine.starship.StarshipShooter;
 import com.engine.starship.UniverseManager;
 import com.engine.starship.utils.GameAssets;
+import com.engine.starship.utils.logic.entities.Starship;
 
 public class Hud implements Disposable {
     private final UniverseManager universeManager;
     private final TextureAtlas.AtlasRegion heartRegion;
+    private final TextureAtlas.AtlasRegion shieldRegion;
+    private final TextureAtlas.AtlasRegion deadHeartRegion;
+    private final TextureAtlas.AtlasRegion deadShieldRegion;
     private final Camera guiCamera = StarshipShooter.getInstance().guiCamera;
     private final UIStage stage;
     private final StarshipShooter starshipShooter = StarshipShooter.getInstance();
@@ -32,6 +39,9 @@ public class Hud implements Disposable {
         uiFont = StarshipShooter.getInstance().gameAssets.getLocalization().getAllLanguages();
         uiFont.getData().setScale(0.95f);
         heartRegion = GameAssets.heart.getInstance();
+        shieldRegion = GameAssets.shield.getInstance();
+        deadHeartRegion = GameAssets.deadHeart.getInstance();
+        deadShieldRegion = GameAssets.deadShield.getInstance();
         stage = new UIStage();
     }
     //Renders everything in the hud.
@@ -49,11 +59,26 @@ public class Hud implements Disposable {
     }
     //Renders the lives ui to the screen.
     private void renderLives(Batch batch){
-       int lives = universeManager.getPlayer().health;
-       int row = 0;
-       for (int i = 0; i <= lives; i++){
-           batch.draw(heartRegion,guiCamera.viewportWidth - 70 * i,guiCamera.viewportHeight - 70 - row,heartRegion.packedWidth * 5,heartRegion.packedHeight * 5);
-       }
+        Starship player = universeManager.getPlayer();
+        for (int i = 0; i <= 5; i++){
+            if (i > player.health){
+                batch.draw(deadHeartRegion,guiCamera.viewportWidth - 60 * i,guiCamera.viewportHeight - 70,
+                        deadHeartRegion.packedWidth * 4,deadHeartRegion.packedHeight * 4);
+            }else {
+                batch.draw(heartRegion,guiCamera.viewportWidth - 60 * i,guiCamera.viewportHeight - 70,
+                        heartRegion.packedWidth * 4,heartRegion.packedHeight * 4);
+            }
+        }
+        //Draw Shield.
+        for (int i = 0 ; i <= 3; i++) {
+            if (i > player.getShields()){
+                batch.draw(deadShieldRegion,guiCamera.viewportWidth - 60 * i,guiCamera.viewportHeight - 120,
+                        deadShieldRegion.packedWidth * 4,deadShieldRegion.packedHeight * 4);
+            }else {
+                batch.draw(shieldRegion,guiCamera.viewportWidth - 60 * i,guiCamera.viewportHeight - 120,
+                        shieldRegion.packedWidth * 4,shieldRegion.packedHeight * 4);
+            }
+        }
     }
     //Renders UI.
     private void renderUI(Batch batch) {
@@ -84,7 +109,9 @@ public class Hud implements Disposable {
             uiFont.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 50, gui.viewportHeight - 15);
             uiFont.setColor(Color.WHITE);
             uiFont.draw(batch, GameAssets.Localization.literal("kill","kill score ") + ":" + UniverseManager.SCORE, 50, gui.viewportHeight - 50);
-            uiFont.draw(batch, GameAssets.Localization.literal("Difficulty","Difficulty ") + ":" + UniverseManager.difficulty, 50, gui.viewportHeight - 80);
+            uiFont.draw(batch, GameAssets.Localization.literal("Difficulty","Difficulty ") + ":" +
+                            StarshipShooter.getInstance().universeManager.level.getLevelDifficulty(),
+                    50, gui.viewportHeight - 80);
             if (universeManager.isDebuggingMode()) {
                 uiFont.draw(batch, coordinates + "\nDraw Calls:" + StarshipShooter.getInstance().profiler.getDrawCalls(), 50, gui.viewportHeight - 50);
             }
@@ -105,6 +132,7 @@ public class Hud implements Disposable {
         public Stage stage;
         public Table root;
         public Button menu;
+        public Button attack;
         public TextButton playAgain;
         public TextButton mainMenu;
         public Label gameOverLabel;
@@ -114,7 +142,7 @@ public class Hud implements Disposable {
         @Override
         public void show() {
             //gets the ui skin from the Game Assets.
-            Skin skin = GameAssets.uiSkin.getSkin();
+            Skin skin = GameAssets.uiSkin.getInstance();
             stage = new Stage(new ExtendViewport(
                     StarshipShooter.getInstance().guiCamera.viewportWidth,
                     StarshipShooter.getInstance().guiCamera.viewportHeight
@@ -126,7 +154,9 @@ public class Hud implements Disposable {
             root.setDebug(StarshipShooter.getInstance().universeManager.isDebuggingMode());
             stage.addActor(root);
             //Menu text button.
-            menu = new Button(skin);;
+            menu = new Button(skin);
+
+            attack = new Button(skin.get("sword_button",Button.ButtonStyle.class));
             //Play Again text button.
             playAgain = new TextButton(GameAssets.Localization.literal("playAgain","Play Again?"),skin);
             playAgain.setVisible(false);
@@ -147,8 +177,10 @@ public class Hud implements Disposable {
             MenuManager.onChange(menu,() -> {
                 Gdx.app.log("Client","Game Paused");
                 isPause = true;
+                GameAssets.hitSound.getInstance().play(0.2f);
             });
             MenuManager.onChange(playAgain,() -> {
+                GameAssets.hitSound.getInstance().play(0.2f);
                 Gdx.app.log("Client","Loading Level");
                 if (isPause){
                     gameOverLabel.setText(GameAssets.Localization.literal("gameOver","Game Over"));
@@ -161,12 +193,27 @@ public class Hud implements Disposable {
                 }
             });
             MenuManager.onChange(mainMenu,() -> {
+                GameAssets.hitSound.getInstance().play(0.2f);
                 Gdx.app.log("Client","Loading Main Menu");
                 MenuManager manager = StarshipShooter.getInstance().menuManager;
                 manager.setScreen(manager.titleMenu);
                 StarshipShooter.getInstance().renderMenus = true;
                 isPause = false;
+                StarshipShooter.getInstance().isPressStart = false;
                 StarshipShooter.getInstance().universeManager.reset();
+            });
+            attack.addListener(new InputListener(){
+                @Override
+                public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                    StarshipShooter.getInstance().universeManager.fireBullet = true;
+                    super.enter(event, x, y, pointer, fromActor);
+                }
+
+                @Override
+                public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                    StarshipShooter.getInstance().universeManager.fireBullet = false;
+                    super.exit(event, x, y, pointer, toActor);
+                }
             });
             //Add components to the sense.
             root.add(menu).expandY().center().top().padTop(10).width(70).height(70);
@@ -178,6 +225,8 @@ public class Hud implements Disposable {
             root.add(playAgain).expand().top().center().width(300).height(90);
             root.row();
             root.add(mainMenu).expand().top().width(300).height(90);
+            root.row();
+            root.add(attack).expandX().right().width(120).height(120).padRight(50).padBottom(50);
         }
         //Renders hud.
         @Override
@@ -194,6 +243,7 @@ public class Hud implements Disposable {
                 gameOverLabel.setText(GameAssets.Localization.literal("pause","Pause"));
                 playAgain.setText(GameAssets.Localization.literal("resume","Resume"));
                 menu.setVisible(false);
+                attack.setVisible(false);
                 playAgain.setVisible(isPause);
                 gameOverLabel.setVisible(isPause);
                 mainMenu.setVisible(isPause);
@@ -201,6 +251,8 @@ public class Hud implements Disposable {
             }
             if (visible) menu.setVisible(false);
             if (!visible) menu.setVisible(true);
+            if (!visible) attack.setVisible(true);
+            if (visible) attack.setVisible(false);
             //Add menu components visibility methods here.
             scoreLabel.setText(GameAssets.Localization.literal("score","score") +": "+UniverseManager.SCORE);
             playAgain.setVisible(visible);

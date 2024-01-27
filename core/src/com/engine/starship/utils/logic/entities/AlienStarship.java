@@ -2,21 +2,24 @@ package com.engine.starship.utils.logic.entities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.ParticleEffectPool;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.engine.starship.StarshipShooter;
+import com.engine.starship.UniverseManager;
 import com.engine.starship.utils.GameAssets;
 import java.util.List;
 
 public class AlienStarship extends Entity {
     public float speed = 0.5f;
-    public int rankLevel = 1;// TODO: 12/18/2023 Add rank level.
-    public int shields = 7;//7%
     private final Sprite target;
     private final PathFinding pathFindingAlgorithm;
     //Just for debugging.
     private final Circle bounds;
+    public boolean isAttackUse = false;
+    public int tick = 0;
 
     public AlienStarship(int x, int y){
         target = new Sprite(GameAssets.alienStarship.getInstance());
@@ -27,7 +30,7 @@ public class AlienStarship extends Entity {
         pathFindingAlgorithm = new PathFinding();
         bounds = new Circle(x,y,0.3f);
         isLiving = true;
-        health = 2;
+        health = 1;
     }
 
     public AlienStarship(int x, int y, int health){
@@ -42,11 +45,32 @@ public class AlienStarship extends Entity {
         this.health = health;
     }
 
-    @Override
-    public void update() {
-        if (health == 0) isLiving = false;
+    public void update(Entity entity) {
+        if (health == 0) {
+            isLiving = false;
+            return;
+        }
         position.set(target.getX() + target.getOriginX() ,target.getY() + target.getOriginY());
         bounds.setPosition(position.x,position.y);
+        if (bounds.overlaps(entity.getBounds())){
+            isLiving = false;
+            if (entity instanceof Starship){
+                Starship starship = (Starship) entity;
+                UniverseManager manager = StarshipShooter.getInstance().universeManager;
+                manager.onHit(entity);
+                ParticleEffectPool.PooledEffect effect = manager.hitPoolEffect.obtain();
+                effect.setPosition(entity.position.x,entity.position.y);
+                manager.effects.add(effect);
+                starship.takeDamage(1);
+            }
+            return;
+        }
+        if (isAttackUse){
+            if (tick >= GameAssets.gameConfigs.bulletDelay){
+                tick = 0;
+                isAttackUse = false;
+            } else tick++;
+        }
         updatePathFinding();
     }
     private final PathFinding.Node current = new PathFinding.Node();
@@ -68,6 +92,15 @@ public class AlienStarship extends Entity {
                 if (!Float.isNaN(moveX) && !Float.isNaN(moveY)){
                     getSprite().translate(moveX,moveY);
                 }
+            }
+        } else {
+            //Move the enemy closer to the play based of the distance.
+            Starship player = StarshipShooter.getInstance().universeManager.getPlayer();
+            float moveX =  (5) * Gdx.graphics.getDeltaTime();
+            if (player.position.x < getSprite().getX()){
+                getSprite().translate(-moveX,0);
+            }else if (player.position.x > getSprite().getX()){
+                getSprite().translate(moveX,0);
             }
         }
     }
@@ -99,5 +132,10 @@ public class AlienStarship extends Entity {
 
     public Circle getBounds() {
         return bounds;
+    }
+
+    @Override
+    public void update() {
+
     }
 }

@@ -1,7 +1,6 @@
 package com.engine.starship.ui;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
@@ -10,13 +9,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ActorGestureListener;
-import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.engine.starship.StarshipShooter;
 import com.engine.starship.utils.GameAssets;
-
-import java.net.MalformedURLException;
-import java.net.URL;
 
 public class CreditsMenu extends MenuObject{
 
@@ -38,7 +33,7 @@ public class CreditsMenu extends MenuObject{
 
     @Override
     public void show() {
-         Skin skin = GameAssets.uiSkin.getSkin();
+         Skin skin = GameAssets.uiSkin.getInstance();
          stage = new Stage(new ExtendViewport(
                  StarshipShooter.getInstance().guiCamera.viewportWidth,
                  StarshipShooter.getInstance().guiCamera.viewportHeight
@@ -63,6 +58,7 @@ public class CreditsMenu extends MenuObject{
 
         //Called events.
         MenuManager.onChange(exit,() -> {
+            GameAssets.hitSound.getInstance().play(0.2f);
             isVisible = false;
             manager.titleMenu.setVisible(true);
         });
@@ -70,6 +66,7 @@ public class CreditsMenu extends MenuObject{
         creditsList.addListener(new ActorGestureListener(){
           @Override
           public void tap(InputEvent event, float x, float y, int count, int button) {
+              GameAssets.hitSound.getInstance().play(0.2f);
               String selectedItem = creditsList.getSelected();
               if (selectedItem.equals("PhilipModDev (Lead Developer)")){
                   Gdx.net.openURI("https://www.youtube.com/@PhilipModDev");

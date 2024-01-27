@@ -2,10 +2,12 @@ package com.engine.starship.utils.logic.entities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.ParticleEffectPool;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.engine.starship.StarshipShooter;
 import com.engine.starship.UniverseManager;
 import com.engine.starship.utils.GameAssets;
 
@@ -60,7 +62,12 @@ public class Asteroid extends Entity {
             isLiving = false;
             if (entity instanceof Starship){
                 Starship starship = (Starship) entity;
-                starship.addHealth(-1);
+                UniverseManager manager = StarshipShooter.getInstance().universeManager;
+                starship.takeDamage(1);
+                StarshipShooter.getInstance().universeManager.onHit(entity);
+                ParticleEffectPool.PooledEffect effect = manager.hitPoolEffect.obtain();
+                effect.setPosition(entity.position.x,entity.position.y);
+                manager.effects.add(effect);
             }
         }
         rotateAsteroids();

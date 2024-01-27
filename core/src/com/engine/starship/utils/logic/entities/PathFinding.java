@@ -3,10 +3,8 @@ package com.engine.starship.utils.logic.entities;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.RandomXS128;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.physics.bullet.collision._btMprSimplex_t;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.engine.starship.StarshipShooter;
 import com.engine.starship.UniverseManager;
 import com.engine.starship.utils.math.Directions;
@@ -19,7 +17,7 @@ import java.util.Queue;
 
 public class PathFinding {
     //The max range distance for the path finding algorithm.
-    public static final int MAX_TRANSVERSAL_DISTANCE  = 20;
+    public static final int MAX_TRANSVERSAL_DISTANCE  = 15;
     public static final Directions[] DIRECTIONS = Directions.values();
     //Gets the universe class.
     private final UniverseManager universeManager = StarshipShooter.getInstance().universeManager;
@@ -27,6 +25,7 @@ public class PathFinding {
     private Vector2 playerPos;
     //Gets the path finding class.
     public ArrayList<Node> pathFindEntity(Entity entity) {
+        final long asyncTime = TimeUtils.millis() + 5;
         Starship player = universeManager.getPlayer();
         Sprite sprite = entity.getSprite();
         //The circle detection range for the path finding.
@@ -36,9 +35,9 @@ public class PathFinding {
             circle.setPosition(sprite.getX() + sprite.getOriginX(),sprite.getY()+ sprite.getOriginY());
             //The start length to search from.
             //Creates the queue for the positions transversal.
-            PriorityQueue<Node> queue = new PriorityQueue<>();
-            BitSet bitSet = new BitSet();
             ArrayList<Node> path = new ArrayList<>();
+            PriorityQueue<Node> queue = new PriorityQueue<>();
+            BitSet bitSet = new BitSet();;
             //Gets the entity's position.
             entityPos = entity.position;
             //Gets the player's position.
@@ -54,6 +53,7 @@ public class PathFinding {
                     path.add(currentNode);
                     return path;
                 }
+                if (TimeUtils.millis() >= asyncTime) return path;
                 float distance = currentNode.dst(goal);
                 Node nextNode = nearestPosToGoal(currentNode,goal);
                 nextNode.setIndex(currentNode.index + 1);
@@ -76,7 +76,7 @@ public class PathFinding {
                             path.add(currentNode);
                             break;
                         }
-                        if (neighboringNode.dst(goal) < distance){
+                        if (neighboringNode.dst(goal) < distance) {
                             if (!bitSet.get(neighboringNode.index)){
                                 bitSet.set(neighboringNode.index + currentNode.index + directions.ordinal() + 1, true);
                                 queue.add(neighboringNode);

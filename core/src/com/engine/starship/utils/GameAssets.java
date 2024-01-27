@@ -2,6 +2,7 @@ package com.engine.starship.utils;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
@@ -24,15 +25,20 @@ public class GameAssets implements Disposable {
     public TextureAtlas gameAtlas;
     public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
     private final TextureRegion missing;
-    public static AssetObject starship;
-    public static AssetObject bullet;
-    public static AssetObject asteroid;
-    public static AssetObject healthAsteroid;
-    public static AssetObject alienStarship;
-    public static AssetObject heart;
-    public static AssetObject uiSkin;
-    public static AssetObject hitSound;
-    public static AssetObject shootSound;
+    public static RegistryAsset.TextureAsset<TextureAtlas.AtlasRegion,Array<TextureAtlas.AtlasRegion>> starship;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> bullet;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> asteroid;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> healthAsteroid;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> alienStarship;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> heart;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> shield;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> deadHeart;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> deadShield;
+    public static RegistryAsset<Skin> uiSkin;
+    public static RegistryAsset<Sound> hitSound;
+    public static RegistryAsset<Sound> shootSound;
+    public static RegistryAsset<Music> backVoid;
+    public static RegistryAsset<Music> lightSpeed;
     public static GameConfigs gameConfigs;
     private final Localization localization = new Localization();
 
@@ -44,11 +50,36 @@ public class GameAssets implements Disposable {
         this.assetManager.load(Constants.TEXTURE_ATLAS,TextureAtlas.class);
         this.assetManager.load("audio/hit.mp3",Sound.class);
         this.assetManager.load("audio/shooter.mp3",Sound.class);
+        this.assetManager.load("audio/black_void.mp3",Music.class);
+        this.assetManager.load("audio/light_speed.mp3",Music.class);
         //Locale language support.
         localization.initLocalization(this.assetManager,LanguageMenu.getCurrentItem());
         this.assetManager .finishLoading();
     }
 
+    public void init(){
+        //Locale language support.
+        localization.initLocalization(this.assetManager,LanguageMenu.getCurrentItem());
+        this.assetManager .finishLoading();
+
+        gameAtlas = assetManager.get(Constants.TEXTURE_ATLAS);
+        localization.initLanguage(assetManager);
+        uiSkin = new RegistryAsset<>(localization.uiSkin);
+        starship = new RegistryAsset.TextureAsset<>(findRegion("starship"),gameAtlas.findRegions("starship"));
+        asteroid = new RegistryAsset<>(findRegion("space_rock"));
+        alienStarship = new RegistryAsset<>(findRegion("alien_starship"));
+        bullet = new RegistryAsset<>(findRegion("bullet"));
+        heart = new RegistryAsset<>(findRegion("heart"));
+        shield = new RegistryAsset<>(findRegion("shield"));
+        deadHeart = new RegistryAsset<>(findRegion("dead_heart"));
+        deadShield = new RegistryAsset<>(findRegion("dead_shield"));
+        healthAsteroid = new RegistryAsset<>(findRegion("health_asteroid"));
+        hitSound = new RegistryAsset<>(assetManager.get("audio/hit.mp3",Sound.class));
+        shootSound = new RegistryAsset<>(assetManager.get("audio/shooter.mp3",Sound.class));
+        backVoid = new RegistryAsset<>(assetManager.get("audio/black_void.mp3",Music.class));
+        lightSpeed = new RegistryAsset<>(assetManager.get("audio/light_speed.mp3",Music.class));
+        loadConfigs();
+    }
 
     public void loadConfigs(){
        try {
@@ -63,25 +94,6 @@ public class GameAssets implements Disposable {
        }catch (Exception exception){
            exception.printStackTrace();
        }
-    }
-
-    public void init(){
-        //Locale language support.
-        localization.initLocalization(this.assetManager,LanguageMenu.getCurrentItem());
-        this.assetManager .finishLoading();
-
-        gameAtlas = assetManager.get(Constants.TEXTURE_ATLAS);
-        localization.initLanguage(assetManager);
-        uiSkin = new AssetObject(localization.uiSkin);
-        starship = new AssetObject(findRegion("starship"),gameAtlas.findRegions("starship"));
-        asteroid = new AssetObject(findRegion("space_rock"));
-        alienStarship = new AssetObject(findRegion("alien_starship"));
-        bullet = new AssetObject(findRegion("bullet"));
-        heart = new AssetObject(findRegion("heart"));
-        healthAsteroid = new AssetObject(findRegion("health_asteroid"));
-        hitSound = new AssetObject(assetManager.get("audio/hit.mp3",Sound.class));
-        shootSound = new AssetObject(assetManager.get("audio/shooter.mp3",Sound.class));
-        loadConfigs();
     }
 
     public Texture getBackground(){
@@ -105,50 +117,9 @@ public class GameAssets implements Disposable {
         missing.getTexture().dispose();
         localization.dispose();
     }
+
     public boolean update(){
        return assetManager.update();
-    }
-
-    public static class AssetObject {
-        private TextureAtlas.AtlasRegion atlasRegion;
-        private Array<TextureAtlas.AtlasRegion> array;
-        private TextureAtlas atlas;
-        private Skin skin;
-        private Sound sound;
-        public AssetObject(TextureAtlas.AtlasRegion atlasRegion){
-            this.atlasRegion = atlasRegion;
-        }
-        public AssetObject(TextureAtlas.AtlasRegion atlasRegion, Array<TextureAtlas.AtlasRegion> array){
-            this.atlasRegion = atlasRegion;
-            this.array = array;
-        }
-        public AssetObject(TextureAtlas.AtlasRegion atlasRegion, TextureAtlas atlas){
-            this.atlasRegion = atlasRegion;
-            this.atlas = atlas;
-        }
-        public AssetObject(Skin skin){
-            this.skin = skin;
-        }
-        public AssetObject(Sound sound){
-            this.sound = sound;
-        }
-        public TextureAtlas.AtlasRegion getInstance() {
-            return atlasRegion;
-        }
-
-        public Skin getSkin() {
-            return skin;
-        }
-
-        public Sound getSound() {
-            return sound;
-        }
-        public Array<TextureAtlas.AtlasRegion> getArray() {
-            return array;
-        }
-        public TextureAtlas getAtlas() {
-            return atlas;
-        }
     }
 
     public static class Localization implements Disposable {

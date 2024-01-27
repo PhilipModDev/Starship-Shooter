@@ -9,7 +9,7 @@ import com.engine.starship.utils.GameAssets;
 
 public class Bullet extends Entity implements Pool.Poolable {
     public static final float SPEED = 12.8f;
-    public static final short MAX_LENGTH = 130;
+    public static final short MAX_LENGTH = 230;
     public final Vector2 direction = new Vector2();
     private final Sprite target;
     private short stepsCounter = 0;

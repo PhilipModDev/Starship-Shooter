@@ -38,7 +38,7 @@ public class TitleMenu extends MenuObject {
 
     @Override
     public void show() {
-        Skin skin = GameAssets.uiSkin.getSkin();
+        Skin skin = GameAssets.uiSkin.getInstance();
         stage = new Stage(new ExtendViewport(
                 StarshipShooter.getInstance().guiCamera.viewportWidth,
                 StarshipShooter.getInstance().guiCamera.viewportHeight
@@ -69,8 +69,10 @@ public class TitleMenu extends MenuObject {
         language = new Button(skin.get("Globle", Button.ButtonStyle.class));
 
         MenuManager.onChange(play,() ->{
+            GameAssets.hitSound.getInstance().play(0.2f);
             StarshipShooter.getInstance().renderMenus = false;
             StarshipShooter.getInstance().universeManager.reset();
+            StarshipShooter.getInstance().isPressStart = true;
             manager.setScreen(manager.universeManager.hud.getStage());
         });
 
@@ -78,10 +80,12 @@ public class TitleMenu extends MenuObject {
            Gdx.app.exit();
         });
         MenuManager.onChange(language,() -> {
+            GameAssets.hitSound.getInstance().play(0.2f);
            manager.languageMenu.setVisible(true);
            this.isVisible = false;
         });
         MenuManager.onChange(credits,() ->{
+            GameAssets.hitSound.getInstance().play(0.2f);
             manager.creditsMenu.setVisible(true);
             this.isVisible = false;
         });

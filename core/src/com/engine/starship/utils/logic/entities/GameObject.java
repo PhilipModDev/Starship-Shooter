@@ -7,7 +7,6 @@ import com.badlogic.gdx.math.Vector3;
 
 public interface GameObject {
      void update();
-
      void render(Batch batch);
      Sprite getSprite();
 

@@ -22,12 +22,11 @@ import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.engine.starship.ui.Hud;
-import com.engine.starship.utils.GameAssets;
+import com.engine.starship.utils.Level;
 import com.engine.starship.utils.events.InputEventSystem;
 import com.engine.starship.utils.logic.entities.AlienStarship;
 import com.engine.starship.utils.logic.entities.Asteroid;
 import com.engine.starship.utils.logic.entities.Bullet;
-import com.engine.starship.utils.logic.entities.Entity;
 import com.engine.starship.utils.logic.entities.Starship;
 import com.engine.starship.utils.CameraUtils;
 import com.engine.starship.utils.Constants;
@@ -48,26 +47,23 @@ public class UniverseManager extends InputEventSystem implements Disposable {
     private boolean isObjectsLoaded = false;
     public boolean isDebuggingMode = false;
     private boolean isGameOver = false;
-    private int difficultyCounter = 0;
-    public static int difficulty = 0;
-    private int spawnDelayCounter = 0;
-    private int spawnDelay = GameAssets.gameConfigs.spawnDelay;
-    private final int bulletDelay = GameAssets.gameConfigs.bulletDelay;
-    private int counter = 0;
-    private int enemyCounter = 0;
+    public boolean fireBullet = false;
     public static int SCORE = 0;
     private ShapeRenderer renderer;
     private Viewport viewport;
+    public Level level;
     public Hud hud;
     //A pool for all the bullets.
-    public final Pool<Bullet> bulletPool = new Pool<Bullet>() {
+    public final Pool<Bullet> bulletPool = new Pool<Bullet>(1,5) {
         @Override
         protected Bullet newObject() {
             return new Bullet(player.position.x, player.position.y);
         }
     };
 
-    public ParticleEffectPool effectPool;
+    public ParticleEffectPool hitPoolEffect;
+    public ParticleEffectPool rocketPoolEffect;
+    private ParticleEffectPool.PooledEffect rocketEffect;
 
     public UniverseManager(StarshipShooter starshipShooter){
         this.starshipShooter = starshipShooter;
@@ -87,6 +83,7 @@ public class UniverseManager extends InputEventSystem implements Disposable {
         viewport = new StretchViewport(Constants.VIEWPORT_WIDTH,Constants.VIEWPORT_HEIGHT);
         hud = new Hud(this);
         hud.getStage().show();
+        level = new Level(this);
     }
 
     public void loadObjects(){
@@ -96,8 +93,14 @@ public class UniverseManager extends InputEventSystem implements Disposable {
          hit.setDuration(1);
          hit.load(Gdx.files.internal("particles/exploded.p"), StarshipShooter.getInstance().gameAssets.gameAtlas);
          hit.scaleEffect(0.03f);
-         hit.setEmittersCleanUpBlendFunction(false);
-         effectPool = new ParticleEffectPool(hit,1,3);
+
+         ParticleEffect rocket = new ParticleEffect();
+         rocket.setDuration(1);
+         rocket.load(Gdx.files.internal("particles/rocket_charge.p"), StarshipShooter.getInstance().gameAssets.gameAtlas);
+         rocket.scaleEffect(0.03f);
+         hitPoolEffect = new ParticleEffectPool(hit,1,4);
+         rocketPoolEffect = new ParticleEffectPool(rocket,1,2);
+
 
         aliens = new Array<>();
         asteroids = new Array<>();
@@ -109,6 +112,10 @@ public class UniverseManager extends InputEventSystem implements Disposable {
         worldBackground.setSize(Constants.WORLD_SIZE_X, Constants.WORLD_SIZE_Y);
         worldBackground.setOrigin(Gdx.graphics.getWidth()/2.0f,Gdx.graphics.getHeight()/2.0f);
         isObjectsLoaded = true;
+
+        rocketEffect = rocketPoolEffect.obtain();
+        rocketEffect.setPosition(player.position.x,player.position.y);
+        effects.add(rocketEffect);
     }
 
     public void renderObjects(float delta) {
@@ -129,8 +136,7 @@ public class UniverseManager extends InputEventSystem implements Disposable {
                   AlienStarship alienStarship = aliens.get(i);
                   if (alienStarship.isLiving){
                       fireEnemyBullet(alienStarship);
-                      firePlayerBullet(alienStarship);
-                      alienStarship.update();
+                      alienStarship.update(player);
                       alienStarship.render(batch);
                   }else {
                       aliens.removeIndex(i);
@@ -147,12 +153,13 @@ public class UniverseManager extends InputEventSystem implements Disposable {
                   } else {
                       bullets.removeIndex(i);
                       bullet.reset();
-                      if (bullets.size < 10){
+                      if (bullets.size <= bulletPool.max){
                           bulletPool.free(bullet);
                       }
                   }
               }
           }
+          rocketEffect.setPosition(player.position.x,player.position.y);
           //updates the effect pool.
           if (!effects.isEmpty()){
               for (int i = 0; i < effects.size; i++) {
@@ -185,18 +192,11 @@ public class UniverseManager extends InputEventSystem implements Disposable {
         player = new Starship((int) (cameraUtils.viewportWidth/2.0f), (int) (cameraUtils.viewportHeight/2.0f));
         isGameOver = false;
         isDebuggingMode = false;
-        difficultyCounter = 0;
-        spawnDelayCounter = 0;
-        spawnDelay = 400;
-        counter = 0;
-        enemyCounter = 0;
-        difficulty = 0;
-        Asteroid.SPEED = 5;
+        level.reset();
         SCORE = 0;
         for (int i = 0; i < effects.size; i++) {
             effects.get(i).free();
         }
-        effects.clear();
     }
     private void renderWorldBackground(Batch batch){
         batch.setProjectionMatrix(viewport.getCamera().combined);
@@ -249,7 +249,8 @@ public class UniverseManager extends InputEventSystem implements Disposable {
 
     //update universe logic.
     public void update(){
-        if (isGameOver || starshipShooter.isGamePaused) return;
+        if (isGameOver || starshipShooter.isGamePaused || hud.getStage().isPause) return;
+
         fireBullet();
         handleInputs();
         checkBulletCollision();
@@ -262,76 +263,82 @@ public class UniverseManager extends InputEventSystem implements Disposable {
         updateBackground();
         updateTouchControls();
         spawnObjects();
-        // TODO: 1/19/2024 Add Level Difficulty System.
         if (!hud.getStage().isPause){
-           if (difficultyCounter >= 300){
-               difficultyCounter = 0;
-               spawnDelay = Math.max(spawnDelay - 8,0);
-               Asteroid.SPEED = Math.min(Asteroid.SPEED + 0.1f,50);
-               difficulty++;
-           }
-           difficultyCounter++;
+           level.update(Gdx.graphics.getDeltaTime());
        }
     }
 
     private void fireBullet(){
-        if (Gdx.input.isKeyJustPressed(Input.Keys.F)){
-            Bullet bullet = bulletPool.obtain();
-            bullet.init(player.position.x,player.position.y);
-            bullets.add(bullet);
-            onShoot();
-        }
-        if (counter >= bulletDelay){
-            if (Gdx.input.isTouched(1)) {
+        if (!player.isAttackUse){
+            if (Gdx.input.isKeyJustPressed(Input.Keys.F)){
+                Bullet bullet = bulletPool.obtain();
+                bullet.init(player.position.x,player.position.y);
+                bullets.add(bullet);
+                onShoot();
+                player.isAttackUse = true;
+            }
+            if (fireBullet){
                 Bullet bullet = bulletPool.obtain();
                 bullet.init(player.position.x, player.position.y);
                 bullets.add(bullet);
                 onShoot();
-            }
-            counter = 0;
-        }
-        counter ++;
-    }
-    private void fireEnemyBullet(Entity entity){
-        if (enemyCounter >= bulletDelay){
-            float py = player.getPosition().y;
-            float px = player.getPosition().x;
-            float ey = entity.getPosition().y;
-            float ex = entity.getPosition().x;
-            if (py + 1 >= ey && py + 1 <= ey + 1){
-                Bullet bullet = bulletPool.obtain();
-                bullet.init(entity.position.x,entity.position.y);
-                bullet.isEnemy = true;
-                if (px > ex) {
-                    bullet.fireRight = true;
+                player.isAttackUse = true;
+            }else {
+                if (Gdx.input.isTouched(1)) {
+                    Bullet bullet = bulletPool.obtain();
+                    bullet.init(player.position.x, player.position.y);
+                    bullets.add(bullet);
+                    onShoot();
+                    player.isAttackUse = true;
                 }
-                bullets.add(bullet);
             }
-            enemyCounter = 0;
         }
-        enemyCounter++;
     }
 
-    private void firePlayerBullet(Entity entity){
-        if (counter >= bulletDelay){
+    private void fireEnemyBullet(AlienStarship alienStarship){
+        if (!alienStarship.isAttackUse){
             float py = player.getPosition().y;
-            float ey = entity.getPosition().y;
-            if (ey <= py + 1 && ey >= py - 1){
-                Bullet bullet = bulletPool.obtain();
-                bullet.init(player.position.x,player.position.y);
-                bullet.fireRight = true;
-                bullets.add(bullet);
-                onShoot();
+            float px = player.getPosition().x;
+            float ey = alienStarship.getPosition().y;
+            float ex = alienStarship.getPosition().x;
+            if (py + 1 >= ey && py + 1 <= ey + 1){
+                if (bullets.size < bulletPool.max) {
+                    Bullet bullet = bulletPool.obtain();
+                    bullet.init(alienStarship.position.x,alienStarship.position.y);
+                    bullet.isEnemy = true;
+                    if (px > ex) {
+                        bullet.fireRight = true;
+                    }
+                    bullets.add(bullet);
+                    alienStarship.isAttackUse = true;
+                }
             }
         }
     }
+
+//    private void firePlayerBullet(Entity entity){
+//        if (!player.isAttackUse){
+//            float py = player.getPosition().y;
+//            float px = player.getPosition().x;
+//            float ey = entity.getPosition().y;
+//            float ex = entity.getPosition().x;
+//            if (ey <= py + 1 && ey >= py - 1 && px <= ex){
+//                Bullet bullet = bulletPool.obtain();
+//                bullet.init(player.position.x,player.position.y);
+//                bullet.fireRight = true;
+//                bullets.add(bullet);
+//                onShoot();
+//                player.isAttackUse = true;
+//            }
+//        }
+//    }
 
     private void checkBulletCollision(){
         for (Bullet bullet : bullets) {
             Vector2 pos = bullet.getPosition();
             for (Asteroid asteroid: asteroids) {
               if (asteroid.getBounds().contains(pos)) {
-                  ParticleEffectPool.PooledEffect effect = effectPool.obtain();
+                  ParticleEffectPool.PooledEffect effect = hitPoolEffect.obtain();
                   effect.setPosition(bullet.position.x,bullet.position.y);
                   effects.add(effect);
                   if (asteroid.isPowerUp){
@@ -347,7 +354,7 @@ public class UniverseManager extends InputEventSystem implements Disposable {
             if (!bullet.isEnemy) {
                 for (AlienStarship alienStarship: aliens) {
                     if (alienStarship.getBounds().contains(pos)) {
-                        ParticleEffectPool.PooledEffect effect = effectPool.obtain();
+                        ParticleEffectPool.PooledEffect effect = hitPoolEffect.obtain();
                         effect.setPosition(bullet.position.x,bullet.position.y);
                         effects.add(effect);
                         bullet.isLiving = false;
@@ -359,11 +366,11 @@ public class UniverseManager extends InputEventSystem implements Disposable {
             }
             if (bullet.isEnemy){
                 if (player.getBounds().contains(bullet.position.x,bullet.position.y)){
-                    ParticleEffectPool.PooledEffect effect = effectPool.obtain();
+                    ParticleEffectPool.PooledEffect effect = hitPoolEffect.obtain();
                     effect.setPosition(bullet.position.x,bullet.position.y);
                     effects.add(effect);
                     bullet.isLiving = false;
-                    player.addHealth(-1);
+                    player.takeDamage(1);
                     onHit(player);
                 }
             }
@@ -371,21 +378,7 @@ public class UniverseManager extends InputEventSystem implements Disposable {
     }
 
     private void spawnObjects(){
-        if (spawnDelayCounter >= spawnDelay){
-            spawnDelayCounter = 0;
-            if (RANDOM_XS_128.nextBoolean()){
-                AlienStarship alienStarship = new AlienStarship((int) (cameraUtils.viewportWidth + 3), RANDOM_XS_128.nextInt((int) cameraUtils.viewportHeight),
-                        RANDOM_XS_128.nextInt(6)
-                );
-                aliens.add(alienStarship);
-            }
-            if (RANDOM_XS_128.nextBoolean()){
-                Asteroid asteroid = new Asteroid((int) (cameraUtils.viewportWidth + 3), RANDOM_XS_128.nextInt((int) cameraUtils.viewportHeight));
-                asteroid.setCanMove(true);
-                asteroids.add(asteroid);
-            }
-        }
-        spawnDelayCounter ++;
+        level.spawnEntities();
     }
     //Updates the background.
     private void updateBackground(){
@@ -505,7 +498,7 @@ public class UniverseManager extends InputEventSystem implements Disposable {
             //Gets the pixels xy coordinates.
             float offset;
             if (Gdx.app.getType() == Application.ApplicationType.Android){
-                offset = 250f;
+                offset = 150f;
             }else {
                 offset = 130f;
             }

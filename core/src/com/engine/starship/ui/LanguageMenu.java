@@ -36,7 +36,7 @@ public class LanguageMenu extends MenuObject  {
 
     @Override
     public void show() {
-        Skin skin = GameAssets.uiSkin.getSkin();
+        Skin skin = GameAssets.uiSkin.getInstance();
 
         stage = new Stage(new ExtendViewport(
                 StarshipShooter.getInstance().guiCamera.viewportWidth,
@@ -51,6 +51,7 @@ public class LanguageMenu extends MenuObject  {
 
         exit = new Button(skin.get("x_menu_button",Button.ButtonStyle.class));
         MenuManager.onChange(exit,() ->{
+            GameAssets.hitSound.getInstance().play(0.2f);
             isVisible = false;
             manager.titleMenu.setVisible(true);
         });
@@ -117,6 +118,7 @@ public class LanguageMenu extends MenuObject  {
         list.addListener(new ActorGestureListener(){
             @Override
             public void tap(InputEvent event, float x, float y, int count, int button) {
+                GameAssets.hitSound.getInstance().play(0.2f);
                 currentItem = list.getSelected();
                 if (currentItem.equals("English")){
                     //Load English Language.

@@ -23,10 +23,12 @@ public class StarshipShooter extends Game {
 	public boolean isGamePaused = false;
 	public boolean renderMenus = true;
 	public boolean reloadGame = false;
+	public boolean isPressStart = false;
 	public boolean isGameLoadingUpStart = false;
 	public GLProfiler profiler;
 	public MenuManager menuManager;
 	private InputEventSystem.EventHandler eventHandler;
+	private int timerCounter = 0;
 
 	@Override
 	public void create () {
@@ -42,12 +44,12 @@ public class StarshipShooter extends Game {
 		universeManager = new UniverseManager(this) {
 			@Override
 			public void onHit(Entity entity) {
-				GameAssets.hitSound.getSound().play();
+				GameAssets.hitSound.getInstance().play();
 			}
 
 			@Override
 			public void onShoot() {
-				GameAssets.shootSound.getSound().play(0.3f);
+				GameAssets.shootSound.getInstance().play(0.3f);
 			}
 		};
 		universeManager.init();
@@ -56,6 +58,12 @@ public class StarshipShooter extends Game {
 		eventHandler.register(universeManager);
 		menuManager = new MenuManager(universeManager);
 		menuManager.create();
+        //Play music on start.
+		if (UniverseManager.RANDOM_XS_128.nextInt(100) < 50){
+			GameAssets.backVoid.getInstance().play();
+		} else if (UniverseManager.RANDOM_XS_128.nextInt(100) > 51){
+			GameAssets.lightSpeed.getInstance().play();
+		}
 	}
 
 	@Override
@@ -83,7 +91,7 @@ public class StarshipShooter extends Game {
 		//loads all assets.
 		if (universeManager.isObjectsLoaded() && gameAssets.update()){
 			//Updates the universe.
-			universeManager.update();
+			if (isPressStart) universeManager.update();
 
 			if (Gdx.input.isKeyJustPressed(Input.Keys.F11) && Gdx.graphics.isFullscreen() ){
 				Gdx.graphics.setWindowedMode(1080,720);
@@ -99,6 +107,17 @@ public class StarshipShooter extends Game {
 			if (Gdx.input.isKeyJustPressed(Input.Keys.R)){
 				universeManager.reset();
 			}
+			//20000 ticks.
+			if (timerCounter == 20000) {
+                timerCounter = 0;
+				int number = UniverseManager.RANDOM_XS_128.nextInt(10);
+				if (number < 5){
+					GameAssets.backVoid.getInstance().play();
+				} else if (number < 8){
+					GameAssets.lightSpeed.getInstance().play();
+				}
+			}
+			timerCounter++;
 		}
 	}
 
@@ -132,9 +151,5 @@ public class StarshipShooter extends Game {
 
 	public static StarshipShooter getInstance(){
 		return STARSHIP_SHOOTER;
-	}
-
-	public InputEventSystem.EventHandler getEventHandler() {
-		return eventHandler;
 	}
 }

@@ -3,8 +3,8 @@ package com.engine.starship.utils;
 
 public class Constants {
     //The world viewport sizes defined.
-    public static final int VIEWPORT_WIDTH = 10;
-    public static final int VIEWPORT_HEIGHT = 10;
+    public static final int VIEWPORT_WIDTH = 15;
+    public static final int VIEWPORT_HEIGHT = 15;
     //Defines the GUI viewport dimensions.
     public static final int GUI_VIEWPORT_WIDTH = 800;
     public static final int GUI_VIEWPORT_HEIGHT = 600;

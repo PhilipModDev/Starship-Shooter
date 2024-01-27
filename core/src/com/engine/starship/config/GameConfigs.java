@@ -1,7 +1,8 @@
 package com.engine.starship.config;
 
 public final class GameConfigs {
-    public int spawnDelay = 400;
-    public int bulletDelay = 30;
-    public int level = 0;
+    public int maxSpawnRatio = 800;
+    public int maxAsteroidSpeed = 50;
+    public int bulletDelay = 800;
+    public int levelTick = 30;
 }

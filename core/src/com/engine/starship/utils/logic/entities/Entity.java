@@ -13,4 +13,5 @@ public abstract class Entity implements GameObject {
     public final Vector2 position = new Vector2();
 
     public Circle getBounds(){ return null;};
+   public abstract void update();
 }

@@ -21,9 +21,13 @@ public class Starship extends Entity {
     private final Sprite target;
     private final Circle bounds;
     private Animation<TextureAtlas.AtlasRegion> animation;
+    public boolean isAttackUse = false;
+    public int maxAttackDelay = 20;
+    private int shieldTick;
+    private int shieldDelay = 1000;//1000 ticks.
+    public int tick = 0;
     public Starship(int x,int y) {
         this.starshipName = "Galactic Starship";
-        this.shields = 5;
         target = new Sprite(GameAssets.starship.getInstance());
         target.setSize(1f,1.3f);
         target.rotate(270);
@@ -33,8 +37,9 @@ public class Starship extends Entity {
         isLiving = true;
         damage = 5;
         health = 5;
+        this.shields = 3;
         bounds = new Circle(position.x,position.y,0.6f);
-        animation = new Animation<>(0.080f,GameAssets.starship.getArray());
+        animation = new Animation<>(0.080f,GameAssets.starship.getAssets());
     }
     //Add the shield and speed values.
     public void addSpeed(int amount){
@@ -46,6 +51,15 @@ public class Starship extends Entity {
     }
     public void addHealth(int amount){
         setHealth(amount + this.health);
+    }
+
+    public void takeDamage(int amount){
+        if (amount >= shields) {
+            addHealth(-(amount - shields));
+            shields = 0;
+        }else {
+            addShields(-amount);
+        }
     }
 
     public void setHealth(int health){
@@ -77,6 +91,16 @@ public class Starship extends Entity {
     public void update() {
         position.set(target.getX() + target.getOriginX(),target.getY() + target.getOriginY());
         bounds.setPosition(position.x,position.y);
+        if (isAttackUse){
+            if (tick >= maxAttackDelay){
+                tick = 0;
+                isAttackUse = false;
+            } else tick++;
+        }
+        if (shieldTick > shieldDelay ){
+            shieldTick = 0;
+            addShields(1);
+        }else if (shields < 3) shieldTick ++;
     }
 
     //This needs to be call in the begin and the end.
