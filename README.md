@@ -1,4 +1,5 @@
 <h1>Starship-Shooter</h1>
+<a href="" title="banner"></a>
 <p>
  Starship Shooter is a 2D spaceship fighter game with the model of being an arcade starship similar to space invaders. Its appearance is the perfect game for those who enjoy pixel related content.
 The is game developed and maintained by PhilipModDev and the team of Cubus Studios to provide users with fun enjoyable experiences exploring the universe. 
