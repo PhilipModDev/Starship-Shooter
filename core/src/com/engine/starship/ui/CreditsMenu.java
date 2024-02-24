@@ -49,8 +49,9 @@ public class CreditsMenu extends MenuObject{
 
         creditsList = new List<>(skin);
         creditsList.setItems (
-                "PhilipModDev (Lead Developer)",
-                "OFFICIAL Biscuit_MC_YT (Lead Artist)"
+                "PhilipModDev (Lead Software Developer)",
+                "OFFICIAL Biscuit_MC_YT (Lead Artist)",
+                "Lolli Chan (Artist)"
         );
 
         scrollPane = new ScrollPane(creditsList,skin);

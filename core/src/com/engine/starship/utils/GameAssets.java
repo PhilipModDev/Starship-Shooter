@@ -2,6 +2,8 @@ package com.engine.starship.utils;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.BitmapFontLoader;
+import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
@@ -15,6 +17,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.engine.starship.StarshipShooter;
 import com.engine.starship.config.GameConfigs;
 import com.engine.starship.ui.LanguageMenu;
+import com.engine.starship.ui.component.StatusBar;
 import com.engine.starship.utils.lang.LanguageBundle;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -25,20 +28,33 @@ public class GameAssets implements Disposable {
     public TextureAtlas gameAtlas;
     public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
     private final TextureRegion missing;
-    public static RegistryAsset.TextureAsset<TextureAtlas.AtlasRegion,Array<TextureAtlas.AtlasRegion>> starship;
+    public static RegistryAsset.MultiRegistryAsset<TextureAtlas.AtlasRegion,Array<TextureAtlas.AtlasRegion>> starship;
     public static RegistryAsset<TextureAtlas.AtlasRegion> bullet;
     public static RegistryAsset<TextureAtlas.AtlasRegion> asteroid;
     public static RegistryAsset<TextureAtlas.AtlasRegion> healthAsteroid;
     public static RegistryAsset<TextureAtlas.AtlasRegion> alienStarship;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> tankAlienStarship;
     public static RegistryAsset<TextureAtlas.AtlasRegion> heart;
     public static RegistryAsset<TextureAtlas.AtlasRegion> shield;
     public static RegistryAsset<TextureAtlas.AtlasRegion> deadHeart;
     public static RegistryAsset<TextureAtlas.AtlasRegion> deadShield;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> bigAsteroidZero;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> colossalAsteroidZero;
+    public static RegistryAsset<Texture> starshipLabel;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> gameOverLabel;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> pauseLabel;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> scoreBackground;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> background;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> highScoreLabel;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> audioIcon;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> particleIcon;
     public static RegistryAsset<Skin> uiSkin;
     public static RegistryAsset<Sound> hitSound;
     public static RegistryAsset<Sound> shootSound;
     public static RegistryAsset<Music> backVoid;
     public static RegistryAsset<Music> lightSpeed;
+    public static RegistryAsset<StatusBar> healthBar;
+    public static RegistryAsset<StatusBar> shieldBar;
     public static GameConfigs gameConfigs;
     private final Localization localization = new Localization();
 
@@ -52,6 +68,10 @@ public class GameAssets implements Disposable {
         this.assetManager.load("audio/shooter.mp3",Sound.class);
         this.assetManager.load("audio/black_void.mp3",Music.class);
         this.assetManager.load("audio/light_speed.mp3",Music.class);
+        TextureLoader.TextureParameter parameter = new TextureLoader.TextureParameter();
+        parameter.magFilter = Texture.TextureFilter.Nearest;
+        parameter.minFilter = Texture.TextureFilter.Nearest;
+        this.assetManager.load("textures/starship_shooter_label.png",Texture.class,parameter);
         //Locale language support.
         localization.initLocalization(this.assetManager,LanguageMenu.getCurrentItem());
         this.assetManager .finishLoading();
@@ -65,9 +85,21 @@ public class GameAssets implements Disposable {
         gameAtlas = assetManager.get(Constants.TEXTURE_ATLAS);
         localization.initLanguage(assetManager);
         uiSkin = new RegistryAsset<>(localization.uiSkin);
-        starship = new RegistryAsset.TextureAsset<>(findRegion("starship"),gameAtlas.findRegions("starship"));
+        starship = new RegistryAsset.MultiRegistryAsset<>(findRegion("starship"),gameAtlas.findRegions("starship"));
+        healthBar = new RegistryAsset<>(() -> new StatusBar(findRegion("status_bar"),findRegion("health_status")));
+        shieldBar = new RegistryAsset<>(() -> new StatusBar(findRegion("status_bar"),findRegion("shield_status")));
+        particleIcon = new RegistryAsset<>(findRegion("particle_icon"));
+        audioIcon = new RegistryAsset<>(findRegion("audio_icon"));
+        highScoreLabel = new RegistryAsset<>(findRegion("high_score_label"));
+        scoreBackground = new RegistryAsset<>(findRegion("score_background"));
+        background = new RegistryAsset<>(findRegion("background"));
+        pauseLabel = new RegistryAsset<>(findRegion("pause_label"));
+        gameOverLabel = new RegistryAsset<>(findRegion("game_over_label"));
         asteroid = new RegistryAsset<>(findRegion("space_rock"));
+        bigAsteroidZero = new RegistryAsset<>(findRegion("big_asteroid0"));
+        colossalAsteroidZero = new RegistryAsset<>(findRegion("collossal_asteroid0"));
         alienStarship = new RegistryAsset<>(findRegion("alien_starship"));
+        tankAlienStarship = new RegistryAsset<>(findRegion("tank_alien"));
         bullet = new RegistryAsset<>(findRegion("bullet"));
         heart = new RegistryAsset<>(findRegion("heart"));
         shield = new RegistryAsset<>(findRegion("shield"));
@@ -78,6 +110,7 @@ public class GameAssets implements Disposable {
         shootSound = new RegistryAsset<>(assetManager.get("audio/shooter.mp3",Sound.class));
         backVoid = new RegistryAsset<>(assetManager.get("audio/black_void.mp3",Music.class));
         lightSpeed = new RegistryAsset<>(assetManager.get("audio/light_speed.mp3",Music.class));
+        starshipLabel = new RegistryAsset<>(assetManager.get("textures/starship_shooter_label.png",Texture.class));
         loadConfigs();
     }
 
@@ -143,8 +176,11 @@ public class GameAssets implements Disposable {
             this.manager = manager;
             Gdx.app.log("Game Localization","Loading country region: "+locale.getDisplayCountry() +" ["+locale.getCountry()+"]" +
                     " Language type: "+locale.getLanguage());
-            manager.load(Constants.PIXEL_FONT, BitmapFont.class);
-            manager.load(Constants.PIXEL_FONT_LOCAL, BitmapFont.class);
+            BitmapFontLoader.BitmapFontParameter bitmapFontParameter = new BitmapFontLoader.BitmapFontParameter();
+            bitmapFontParameter.magFilter = Texture.TextureFilter.Nearest;
+            bitmapFontParameter.minFilter = Texture.TextureFilter.Nearest;
+            manager.load(Constants.PIXEL_FONT, BitmapFont.class,bitmapFontParameter);
+            manager.load(Constants.PIXEL_FONT_LOCAL, BitmapFont.class,bitmapFontParameter);
 
             if (StarshipShooter.getInstance().isGameLoadingUpStart){
                 if (locale.equals(Locale.US)) {
@@ -317,7 +353,7 @@ public class GameAssets implements Disposable {
             return currentLanguage;
         }
 
-        public static String literal(String key, String defaultValue){
+        public static String translate(String key, String defaultValue){
             if (bundle == null) return defaultValue;
             String text = bundle.getString(key);
             if (text == null) return defaultValue;

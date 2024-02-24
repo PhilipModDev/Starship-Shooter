@@ -1,6 +1,5 @@
 package com.engine.starship.utils;
 
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 
 //Registry asset system.
 //By PhilipModDev.
@@ -10,13 +9,17 @@ public class RegistryAsset<T> {
         this.asset = asset;
     }
 
+    public RegistryAsset(Provider<T> provider){
+        this.asset = provider.provide();
+    }
+
     public T getInstance() {
         return asset;
     }
 
-    public final static class TextureAsset <T extends TextureAtlas.AtlasRegion, A> extends RegistryAsset<T> {
+    public final static class MultiRegistryAsset<T, A> extends RegistryAsset<T> {
         private final A assets;
-        public TextureAsset(T region,A assets) {
+        public MultiRegistryAsset(T region, A assets) {
             super(region);
             this.assets =  assets;
         }

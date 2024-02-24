@@ -14,7 +14,7 @@ import java.util.List;
 
 public class AlienStarship extends Entity {
     public float speed = 0.5f;
-    private final Sprite target;
+    public Sprite target;
     private final PathFinding pathFindingAlgorithm;
     //Just for debugging.
     private final Circle bounds;
@@ -61,7 +61,7 @@ public class AlienStarship extends Entity {
                 ParticleEffectPool.PooledEffect effect = manager.hitPoolEffect.obtain();
                 effect.setPosition(entity.position.x,entity.position.y);
                 manager.effects.add(effect);
-                starship.takeDamage(1);
+                starship.takeDamage(6);
             }
             return;
         }
@@ -95,8 +95,8 @@ public class AlienStarship extends Entity {
             }
         } else {
             //Move the enemy closer to the play based of the distance.
-            Starship player = StarshipShooter.getInstance().universeManager.getPlayer();
-            float moveX =  (5) * Gdx.graphics.getDeltaTime();
+            Starship player = StarshipShooter.getInstance().universeManager.getPlayerShip();
+            float moveX =  (5 + speed) * Gdx.graphics.getDeltaTime();
             if (player.position.x < getSprite().getX()){
                 getSprite().translate(-moveX,0);
             }else if (player.position.x > getSprite().getX()){

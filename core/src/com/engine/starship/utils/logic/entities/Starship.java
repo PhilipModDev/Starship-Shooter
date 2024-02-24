@@ -1,14 +1,15 @@
 package com.engine.starship.utils.logic.entities;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.engine.starship.utils.logic.Player;
 import com.engine.starship.utils.logic.StarshipTier;
 import com.engine.starship.utils.GameAssets;
 
@@ -16,7 +17,7 @@ import com.engine.starship.utils.GameAssets;
 public class Starship extends Entity {
     public String starshipName;
     private int shields;
-    private int speed = 7;//5%
+    private int speed = 20;//20%
     public StarshipTier tierRank = StarshipTier.TIN;
     private final Sprite target;
     private final Circle bounds;
@@ -26,7 +27,11 @@ public class Starship extends Entity {
     private int shieldTick;
     private int shieldDelay = 1000;//1000 ticks.
     public int tick = 0;
-    public Starship(int x,int y) {
+    public static final int MAX_HEALTH = 20;
+    public static final int MAX_SHIELD = 20;
+    public Starship(int x, int y, Player player) {
+        speed = player.getSensitively();
+        if (Gdx.app.getType() == Application.ApplicationType.Desktop) speed = 7;
         this.starshipName = "Galactic Starship";
         target = new Sprite(GameAssets.starship.getInstance());
         target.setSize(1f,1.3f);
@@ -36,8 +41,8 @@ public class Starship extends Entity {
         position.set(target.getX() + target.getOriginX(),target.getY() + target.getOriginY());
         isLiving = true;
         damage = 5;
-        health = 5;
-        this.shields = 3;
+        health = MAX_HEALTH;
+        this.shields = MAX_SHIELD;
         bounds = new Circle(position.x,position.y,0.6f);
         animation = new Animation<>(0.080f,GameAssets.starship.getAssets());
     }
@@ -63,11 +68,11 @@ public class Starship extends Entity {
     }
 
     public void setHealth(int health){
-        this.health = MathUtils.clamp(health,0,5);
+        this.health = MathUtils.clamp(health,0,MAX_HEALTH);
     }
 
     public void setShields(int shields){
-        this.shields = MathUtils.clamp(shields,0,100);
+        this.shields = MathUtils.clamp(shields,0,MAX_SHIELD);
     }
 
 
@@ -99,8 +104,8 @@ public class Starship extends Entity {
         }
         if (shieldTick > shieldDelay ){
             shieldTick = 0;
-            addShields(1);
-        }else if (shields < 3) shieldTick ++;
+            addShields(3);
+        }else if (shields < MAX_SHIELD) shieldTick ++;
     }
 
     //This needs to be call in the begin and the end.

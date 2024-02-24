@@ -2,6 +2,7 @@ package com.engine.starship.utils;
 
 
 public class Constants {
+
     //The world viewport sizes defined.
     public static final int VIEWPORT_WIDTH = 15;
     public static final int VIEWPORT_HEIGHT = 15;
@@ -20,6 +21,7 @@ public class Constants {
     public static final String PIXEL_FONT_LOCAL = "ui/font/pixel_local.fnt";
     public static final String HINDI_FONT = "ui/font/hindi/hindi_fonts.fnt";
     public static final String VIETNAMESE_FONT = "ui/font/vietnamese/vietnamese_fonts.fnt";
+    public static final String RESOURCE_LOCATION = "data/";
     //Defines the application version.
     public static final String VERSION = "v1.0.0";
 }

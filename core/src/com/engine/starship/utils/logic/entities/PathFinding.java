@@ -26,7 +26,7 @@ public class PathFinding {
     //Gets the path finding class.
     public ArrayList<Node> pathFindEntity(Entity entity) {
         final long asyncTime = TimeUtils.millis() + 5;
-        Starship player = universeManager.getPlayer();
+        Starship player = universeManager.getPlayerShip();
         Sprite sprite = entity.getSprite();
         //The circle detection range for the path finding.
         Circle circle = new Circle(sprite.getX(), sprite.getY(), MAX_TRANSVERSAL_DISTANCE);
@@ -58,7 +58,7 @@ public class PathFinding {
                 Node nextNode = nearestPosToGoal(currentNode,goal);
                 nextNode.setIndex(currentNode.index + 1);
                 circle.setPosition(nextNode.x, nextNode.y);
-                if (universeManager.isCollisionTest(circle)) continue;
+//                if (universeManager.isCollisionTest(circle)) continue;
                 if (!bitSet.get(nextNode.index) && nextNode.dst(goal) < distance){
                     bitSet.set(nextNode.index,true);
                     queue.add(nextNode);
@@ -68,7 +68,7 @@ public class PathFinding {
                     for (Directions directions : DIRECTIONS) {
                         Node neighboringNode = getNodeAtNeighbor(nextNode,directions);
                         circle.setPosition(neighboringNode.x, neighboringNode.y);
-                        if (universeManager.isCollisionTest(circle)) continue;
+//                        if (universeManager.isCollisionTest(circle)) continue;
 
                         if (neighboringNode.equals(goal)){
                             queue.add(neighboringNode);
@@ -93,7 +93,7 @@ public class PathFinding {
 
     public ArrayList<Node> pathFindEntity2(Entity entity) {
         if (entity.isLiving) return null;
-        Starship player = universeManager.getPlayer();
+        Starship player = universeManager.getPlayerShip();
         Sprite sprite = entity.getSprite();
         //The circle detection range for the path finding.
         Circle circle = new Circle(sprite.getX(), sprite.getY(), MAX_TRANSVERSAL_DISTANCE);

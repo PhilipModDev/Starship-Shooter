@@ -1,6 +1,5 @@
 package com.engine.starship;
 
-
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -23,32 +22,44 @@ import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.engine.starship.ui.Hud;
 import com.engine.starship.utils.Level;
-import com.engine.starship.utils.events.InputEventSystem;
+import com.engine.starship.utils.events.EventSystem;
+import com.engine.starship.utils.io.data.DataParser;
+import com.engine.starship.utils.io.data.PlayDataBuilder;
+import com.engine.starship.utils.io.ScoreParser;
+import com.engine.starship.utils.logic.Player;
 import com.engine.starship.utils.logic.entities.AlienStarship;
 import com.engine.starship.utils.logic.entities.Asteroid;
 import com.engine.starship.utils.logic.entities.Bullet;
-import com.engine.starship.utils.logic.entities.Starship;
+import com.engine.starship.utils.logic.entities.Entity;
+import com.engine.starship.utils.logic.entities.SalusAsteroid;
 import com.engine.starship.utils.CameraUtils;
 import com.engine.starship.utils.Constants;
+import com.engine.starship.utils.logic.entities.Starship;
 
-public class UniverseManager extends InputEventSystem implements Disposable {
+public class UniverseManager extends EventSystem implements Disposable {
     private final StarshipShooter starshipShooter;
     public static final RandomXS128 RANDOM_XS_128 = new RandomXS128();
+    private Texture[] backgrounds;
+    private final float[] offsetBackgrounds = {0,0};
     public Array<AlienStarship> aliens;
     public Array<Asteroid> asteroids;
     public Array<Bullet> bullets;
     public Array<ParticleEffectPool.PooledEffect> effects;
-    private Starship player;
+    public ScoreParser scoreParser;
+    private Starship playerShip;
+    private Player player;
+    private DataParser dataParser;
     public CameraUtils cameraUtils;
-    private SpriteBatch batch;
+    public SpriteBatch batch;
     private Sprite worldBackground;
-    private Texture background;
-    private float backgroundOffset;
     private boolean isObjectsLoaded = false;
     public boolean isDebuggingMode = false;
     private boolean isGameOver = false;
     public boolean fireBullet = false;
+    public boolean autoFire = true;
+    public boolean particles = true;
     public static int SCORE = 0;
+    private int scoreCounter = 0;
     private ShapeRenderer renderer;
     private Viewport viewport;
     public Level level;
@@ -57,21 +68,29 @@ public class UniverseManager extends InputEventSystem implements Disposable {
     public final Pool<Bullet> bulletPool = new Pool<Bullet>(1,5) {
         @Override
         protected Bullet newObject() {
-            return new Bullet(player.position.x, player.position.y);
+            return new Bullet(playerShip.position.x, playerShip.position.y);
         }
     };
 
     public ParticleEffectPool hitPoolEffect;
     public ParticleEffectPool rocketPoolEffect;
+    public ParticleEffectPool pointPoolEffect;
     private ParticleEffectPool.PooledEffect rocketEffect;
 
     public UniverseManager(StarshipShooter starshipShooter){
         this.starshipShooter = starshipShooter;
+        dataParser = starshipShooter.getDataParser();
+        PlayDataBuilder playDataBuilder = new PlayDataBuilder();
+        player = new Player(playDataBuilder,dataParser);
     }
 
-//    private ParticleEffect particleEffect;
 
     public void init(){
+        scoreParser = new ScoreParser();
+//        ShaderProgram shaderProgram = new ShaderProgram(
+//                Gdx.files.internal("shaders/vertex.glsl"),
+//                Gdx.files.internal("shaders/fragment.glsl")
+//        );
         batch = new SpriteBatch();
         Gdx.input.setInputProcessor(this);
         cameraUtils = new CameraUtils(0,0);
@@ -79,16 +98,21 @@ public class UniverseManager extends InputEventSystem implements Disposable {
         renderer = new ShapeRenderer();
         renderer.setColor(Color.RED);
         renderer.setAutoShapeType(true);
-        background = new Texture(Gdx.files.internal("textures/star_background_0.png"));
+        //Init the background data.
+        backgrounds = new Texture[2];
+        backgrounds[0] = new Texture(Gdx.files.internal("textures/star_background_0.png"));
+        backgrounds[1] = new Texture(Gdx.files.internal("textures/star_background_1.png"));
+
         viewport = new StretchViewport(Constants.VIEWPORT_WIDTH,Constants.VIEWPORT_HEIGHT);
         hud = new Hud(this);
         hud.getStage().show();
         level = new Level(this);
+        player.setBoundShip(playerShip);
     }
 
     public void loadObjects(){
 
-        //Effect just for test
+        //Load all effects.
          ParticleEffect hit = new ParticleEffect();
          hit.setDuration(1);
          hit.load(Gdx.files.internal("particles/exploded.p"), StarshipShooter.getInstance().gameAssets.gameAtlas);
@@ -98,29 +122,36 @@ public class UniverseManager extends InputEventSystem implements Disposable {
          rocket.setDuration(1);
          rocket.load(Gdx.files.internal("particles/rocket_charge.p"), StarshipShooter.getInstance().gameAssets.gameAtlas);
          rocket.scaleEffect(0.03f);
-         hitPoolEffect = new ParticleEffectPool(hit,1,4);
-         rocketPoolEffect = new ParticleEffectPool(rocket,1,2);
 
+         ParticleEffect point = new ParticleEffect();
+         point.setDuration(1);
+         point.load(Gdx.files.internal("particles/point.p"), StarshipShooter.getInstance().gameAssets.gameAtlas);
+         point.scaleEffect(0.05f);
+
+        hitPoolEffect = new ParticleEffectPool(hit,1,4);
+        rocketPoolEffect = new ParticleEffectPool(rocket,1,2);
+        pointPoolEffect = new ParticleEffectPool(point,1,3);
 
         aliens = new Array<>();
         asteroids = new Array<>();
         bullets = new Array<>();
         effects = new Array<>();
 
-        player = new Starship((int) (cameraUtils.viewportWidth/2.0f), (int) (cameraUtils.viewportHeight/2.0f));
+        playerShip = new Starship((int) (cameraUtils.viewportWidth/2.0f), (int) (cameraUtils.viewportHeight/2.0f),player);
         worldBackground = new Sprite(starshipShooter.gameAssets.getBackground());
         worldBackground.setSize(Constants.WORLD_SIZE_X, Constants.WORLD_SIZE_Y);
         worldBackground.setOrigin(Gdx.graphics.getWidth()/2.0f,Gdx.graphics.getHeight()/2.0f);
         isObjectsLoaded = true;
 
         rocketEffect = rocketPoolEffect.obtain();
-        rocketEffect.setPosition(player.position.x,player.position.y);
+        rocketEffect.setPosition(playerShip.position.x, playerShip.position.y);
         effects.add(rocketEffect);
+        hud.init();
     }
 
     public void renderObjects(float delta) {
         renderWorldBackground(batch);
-      if (!isGameOver && !hud.getStage().isPause && !starshipShooter.renderMenus){
+      if (!isGameOver && !StarshipShooter.MENUS){
           if (isDebuggingMode){
               //Debugging only.
               starshipShooter.profiler.reset();
@@ -135,8 +166,11 @@ public class UniverseManager extends InputEventSystem implements Disposable {
               for (int i = 0; i < aliens.size; i++) {
                   AlienStarship alienStarship = aliens.get(i);
                   if (alienStarship.isLiving){
-                      fireEnemyBullet(alienStarship);
-                      alienStarship.update(player);
+                      if (!StarshipShooter.GAME_PAUSE) {
+                          fireEnemyBullet(alienStarship);
+                          if (autoFire) firePlayerBullet(alienStarship);
+                          alienStarship.update(playerShip);
+                      }
                       alienStarship.render(batch);
                   }else {
                       aliens.removeIndex(i);
@@ -148,7 +182,7 @@ public class UniverseManager extends InputEventSystem implements Disposable {
               for(int i = 0; i < bullets.size; i++){
                   Bullet bullet = bullets.get(i);
                   if (bullet.isLiving){
-                      bullet.update();
+                      if (!StarshipShooter.GAME_PAUSE) bullet.update();
                       bullet.render(batch);
                   } else {
                       bullets.removeIndex(i);
@@ -159,9 +193,8 @@ public class UniverseManager extends InputEventSystem implements Disposable {
                   }
               }
           }
-          rocketEffect.setPosition(player.position.x,player.position.y);
           //updates the effect pool.
-          if (!effects.isEmpty()){
+          if (!effects.isEmpty() && particles){
               for (int i = 0; i < effects.size; i++) {
                   ParticleEffectPool.PooledEffect effect = effects.get(i);
                   effect.draw(batch,delta);
@@ -171,42 +204,51 @@ public class UniverseManager extends InputEventSystem implements Disposable {
                   }
               }
           }
-          player.render(batch);
+          rocketEffect.setPosition(playerShip.position.x, playerShip.position.y);
+          playerShip.render(batch);
           batch.end();
       }
-      if (!starshipShooter.renderMenus) {
-          hud.render(batch);
-          hud.getStage().render(delta);
+      if (!StarshipShooter.MENUS) {
+          hud.render(batch,delta);
       }
-        if (starshipShooter.renderMenus){
+        if (StarshipShooter.MENUS){
             starshipShooter.menuManager.render();
         }
     }
 
     public void reset(){
+        try {
+            dataParser.savePlayerData(player.getPlayerData());
+        }catch (Exception exception){
+            exception.printStackTrace();
+        }
+        scoreParser.updateHighScore();
         bullets.clear();
         asteroids.clear();
         aliens.clear();
         bulletPool.clear();
         RANDOM_XS_128.setSeed(RANDOM_XS_128.nextLong());
-        player = new Starship((int) (cameraUtils.viewportWidth/2.0f), (int) (cameraUtils.viewportHeight/2.0f));
+        playerShip = new Starship((int) (cameraUtils.viewportWidth/2.0f), (int) (cameraUtils.viewportHeight/2.0f),player);
         isGameOver = false;
         isDebuggingMode = false;
         level.reset();
-        SCORE = 0;
+        scoreCounter = 0;
         for (int i = 0; i < effects.size; i++) {
             effects.get(i).free();
         }
     }
     private void renderWorldBackground(Batch batch){
+        // TODO: 2/5/2024 Add the background with depth.
         batch.setProjectionMatrix(viewport.getCamera().combined);
         batch.begin();
-        backgroundOffset += 0.01;
-        if (backgroundOffset > cameraUtils.viewportHeight){
-            backgroundOffset = 0;
-        }
-        batch.draw(background,0,-backgroundOffset,cameraUtils.viewportWidth ,cameraUtils.viewportHeight);
-        batch.draw(background,0,-backgroundOffset + cameraUtils.viewportHeight,cameraUtils.viewportWidth ,cameraUtils.viewportHeight);
+            offsetBackgrounds[0] = offsetBackgrounds[0] + 0.01f;
+            offsetBackgrounds[1] = offsetBackgrounds[1] + 0.02f;
+          for (int i = 0; i < backgrounds.length; i++) {
+              if (offsetBackgrounds[i] > cameraUtils.viewportWidth) offsetBackgrounds[i] = 0;
+              batch.draw(backgrounds[i], -offsetBackgrounds[i],0, cameraUtils.viewportWidth, cameraUtils.viewportHeight);
+              batch.draw(backgrounds[i], -offsetBackgrounds[i] + cameraUtils.viewportWidth, 0, cameraUtils.viewportWidth, cameraUtils.viewportHeight);
+          }
+
         batch.end();
     }
 
@@ -216,16 +258,31 @@ public class UniverseManager extends InputEventSystem implements Disposable {
             renderer.setProjectionMatrix(cameraUtils.combined);
             renderer.begin(ShapeRenderer.ShapeType.Line);
         }
+        //If there's any asteroids to render.
         if (!asteroids.isEmpty()) {
             for (int i = 0; i < asteroids.size; i++) {
                 Asteroid asteroid = asteroids.get(i);
+                //Checks whether of the asteroid is living.
                 if (asteroid.isLiving){
-                    asteroid.update(player);
+                    if (asteroid instanceof SalusAsteroid){
+                        //Gets the salus asteroid.
+                        SalusAsteroid salusAsteroid = (SalusAsteroid) asteroid;
+                        //Checks if the particles is true.
+                        if (salusAsteroid.spawnHeart && particles){
+                            ParticleEffectPool.PooledEffect effect = hitPoolEffect.obtain();
+                            effect.setPosition(asteroid.position.x,asteroid.position.y);
+                            effects.add(effect);
+                        }
+                    }
+                    if (!StarshipShooter.GAME_PAUSE){
+                        asteroid.update(playerShip);
+                        if (autoFire) firePlayerBullet(asteroid);
+                    }
                     asteroid.render(batch);
                     //Debug only.
                     if (isDebuggingMode) {
                         Circle circle = asteroid.getBounds();
-                        Circle player = getPlayer().getBounds();
+                        Circle player = getPlayerShip().getBounds();
                         for (AlienStarship alienStarship : aliens) {
                             Circle alien = alienStarship.getBounds();
                             renderer.circle(alien.x, alien.y, alien.radius);
@@ -234,7 +291,7 @@ public class UniverseManager extends InputEventSystem implements Disposable {
                         renderer.circle(player.x, player.y, player.radius);
                     }
                     //If out of screen remove it from the hashMap.
-                    if (asteroid.position.x < 0){
+                    if (asteroid.position.x < -4){
                         asteroids.removeIndex(i);
                     }
                 }else {
@@ -249,47 +306,55 @@ public class UniverseManager extends InputEventSystem implements Disposable {
 
     //update universe logic.
     public void update(){
-        if (isGameOver || starshipShooter.isGamePaused || hud.getStage().isPause) return;
+        if (isGameOver || StarshipShooter.GAME_PAUSE) {
+            scoreParser.updateHighScore();
+            return;
+        }
 
         fireBullet();
         handleInputs();
         checkBulletCollision();
-        player.update();
+        playerShip.update();
         //Checks if the player has been killed.
-        if (!player.isLiving){
+        if (!playerShip.isLiving){
             isGameOver = true;
         }
         cameraUtils.update();
         updateBackground();
         updateTouchControls();
         spawnObjects();
-        if (!hud.getStage().isPause){
+        if (!StarshipShooter.GAME_PAUSE){
            level.update(Gdx.graphics.getDeltaTime());
        }
+
+        //Debug
+        if (Gdx.input.isKeyJustPressed(Input.Keys.K)){
+            isGameOver = true;
+        }
     }
 
     private void fireBullet(){
-        if (!player.isAttackUse){
+        if (!playerShip.isAttackUse){
             if (Gdx.input.isKeyJustPressed(Input.Keys.F)){
                 Bullet bullet = bulletPool.obtain();
-                bullet.init(player.position.x,player.position.y);
+                bullet.init(playerShip.position.x, playerShip.position.y);
                 bullets.add(bullet);
                 onShoot();
-                player.isAttackUse = true;
+                playerShip.isAttackUse = true;
             }
             if (fireBullet){
                 Bullet bullet = bulletPool.obtain();
-                bullet.init(player.position.x, player.position.y);
+                bullet.init(playerShip.position.x, playerShip.position.y);
                 bullets.add(bullet);
                 onShoot();
-                player.isAttackUse = true;
+                playerShip.isAttackUse = true;
             }else {
                 if (Gdx.input.isTouched(1)) {
                     Bullet bullet = bulletPool.obtain();
-                    bullet.init(player.position.x, player.position.y);
+                    bullet.init(playerShip.position.x, playerShip.position.y);
                     bullets.add(bullet);
                     onShoot();
-                    player.isAttackUse = true;
+                    playerShip.isAttackUse = true;
                 }
             }
         }
@@ -297,11 +362,11 @@ public class UniverseManager extends InputEventSystem implements Disposable {
 
     private void fireEnemyBullet(AlienStarship alienStarship){
         if (!alienStarship.isAttackUse){
-            float py = player.getPosition().y;
-            float px = player.getPosition().x;
+            float py = playerShip.getPosition().y;
+            float px = playerShip.getPosition().x;
             float ey = alienStarship.getPosition().y;
             float ex = alienStarship.getPosition().x;
-            if (py + 1 >= ey && py + 1 <= ey + 1){
+            if (py + 2 >= ey && py + 2 <= ey + 2){
                 if (bullets.size < bulletPool.max) {
                     Bullet bullet = bulletPool.obtain();
                     bullet.init(alienStarship.position.x,alienStarship.position.y);
@@ -316,35 +381,49 @@ public class UniverseManager extends InputEventSystem implements Disposable {
         }
     }
 
-//    private void firePlayerBullet(Entity entity){
-//        if (!player.isAttackUse){
-//            float py = player.getPosition().y;
-//            float px = player.getPosition().x;
-//            float ey = entity.getPosition().y;
-//            float ex = entity.getPosition().x;
-//            if (ey <= py + 1 && ey >= py - 1 && px <= ex){
-//                Bullet bullet = bulletPool.obtain();
-//                bullet.init(player.position.x,player.position.y);
-//                bullet.fireRight = true;
-//                bullets.add(bullet);
-//                onShoot();
-//                player.isAttackUse = true;
-//            }
-//        }
-//    }
+    private void firePlayerBullet(Entity entity){
+        if (!playerShip.isAttackUse){
+            float py = playerShip.getPosition().y;
+            float px = playerShip.getPosition().x;
+            float ey = entity.getPosition().y;
+            float ex = entity.getPosition().x;
+            if (ey <= py + 2 && ey >= py - 2 && px <= ex){
+                Bullet bullet = bulletPool.obtain();
+                bullet.init(playerShip.position.x, playerShip.position.y);
+                bullet.fireRight = true;
+                bullets.add(bullet);
+                onShoot();
+                playerShip.isAttackUse = true;
+            }
+        }
+    }
 
     private void checkBulletCollision(){
         for (Bullet bullet : bullets) {
             Vector2 pos = bullet.getPosition();
             for (Asteroid asteroid: asteroids) {
               if (asteroid.getBounds().contains(pos)) {
-                  ParticleEffectPool.PooledEffect effect = hitPoolEffect.obtain();
-                  effect.setPosition(bullet.position.x,bullet.position.y);
-                  effects.add(effect);
-                  if (asteroid.isPowerUp){
-                      asteroid.isPowerUp = false;
-                      player.addHealth(1);
+                  if (particles){
+                      ParticleEffectPool.PooledEffect effect = hitPoolEffect.obtain();
+                      effect.setPosition(bullet.position.x,bullet.position.y);
+                      effects.add(effect);
                   }
+                  //Checks if the bullet collied with a power up asteroid.
+                  if (asteroid instanceof SalusAsteroid) {
+                      SalusAsteroid salusAsteroid = (SalusAsteroid) asteroid;
+                      if (salusAsteroid.spawnHeart){
+                          salusAsteroid.checkDeath(() -> {
+                              asteroid.isPowerUp = false;
+                              playerShip.addHealth(2);
+                          });
+                      }else {
+                          salusAsteroid.changeState();
+                      }
+                      bullet.isLiving = false;
+                      onHit(asteroid);
+                      continue;
+                  }
+
                   bullet.isLiving = false;
                   asteroid.health +=  - 1;
                   onHit(asteroid);
@@ -354,24 +433,38 @@ public class UniverseManager extends InputEventSystem implements Disposable {
             if (!bullet.isEnemy) {
                 for (AlienStarship alienStarship: aliens) {
                     if (alienStarship.getBounds().contains(pos)) {
-                        ParticleEffectPool.PooledEffect effect = hitPoolEffect.obtain();
-                        effect.setPosition(bullet.position.x,bullet.position.y);
-                        effects.add(effect);
+                        if (particles){
+                            ParticleEffectPool.PooledEffect effect = hitPoolEffect.obtain();
+                            effect.setPosition(bullet.position.x,bullet.position.y);
+                            effects.add(effect);
+                        }
                         bullet.isLiving = false;
                         alienStarship.addHealth(-1);
-                        SCORE += 1;
+                        //Calculates the score.
+                        if (alienStarship.health == 0){
+                            SCORE += 1;
+                            if (particles){
+                                ParticleEffectPool.PooledEffect point = pointPoolEffect.obtain();
+                                point.setPosition(bullet.position.x,bullet.position.y);
+                                effects.add(point);
+                            }
+                        }
                         onHit(alienStarship);
                     }
                 }
             }
             if (bullet.isEnemy){
-                if (player.getBounds().contains(bullet.position.x,bullet.position.y)){
-                    ParticleEffectPool.PooledEffect effect = hitPoolEffect.obtain();
-                    effect.setPosition(bullet.position.x,bullet.position.y);
-                    effects.add(effect);
+                if (playerShip.getBounds().contains(bullet.position.x,bullet.position.y)){
+
+                    if (particles){
+                        ParticleEffectPool.PooledEffect effect = hitPoolEffect.obtain();
+                        effect.setPosition(bullet.position.x,bullet.position.y);
+                        effects.add(effect);
+                    }
+
                     bullet.isLiving = false;
-                    player.takeDamage(1);
-                    onHit(player);
+                    playerShip.takeDamage(6);
+                    onHit(playerShip);
                 }
             }
         }
@@ -400,29 +493,29 @@ public class UniverseManager extends InputEventSystem implements Disposable {
             }
 
             if (Gdx.input.isKeyPressed(Input.Keys.W)){
-                float yMove = 1f * player.getSpeed() * Gdx.graphics.getDeltaTime();
-                Sprite playerSprite = player.getSprite();
+                float yMove = 1f * playerShip.getSpeed() * Gdx.graphics.getDeltaTime();
+                Sprite playerSprite = playerShip.getSprite();
                 if (!isOutScreen(playerSprite)){
                     playerSprite.translate(0,yMove);
                 }
             }
             if (Gdx.input.isKeyPressed(Input.Keys.S)){
-                float yMove = 1f * player.getSpeed() * Gdx.graphics.getDeltaTime();
-                Sprite playerSprite = player.getSprite();
+                float yMove = 1f * playerShip.getSpeed() * Gdx.graphics.getDeltaTime();
+                Sprite playerSprite = playerShip.getSprite();
                 if (!isOutScreen(playerSprite)){
                     playerSprite.translate(0,-yMove);
                 }
             }
             if (Gdx.input.isKeyPressed(Input.Keys.A)){
-                float xMove = 1f * player.getSpeed() * Gdx.graphics.getDeltaTime();
-                Sprite playerSprite = player.getSprite();
+                float xMove = 1f * playerShip.getSpeed() * Gdx.graphics.getDeltaTime();
+                Sprite playerSprite = playerShip.getSprite();
                 if (!isOutScreen(playerSprite)){
                     playerSprite.translate(-xMove,0);
                 }
             }
             if (Gdx.input.isKeyPressed(Input.Keys.D)){
-                float xMove = 1f * player.getSpeed() * Gdx.graphics.getDeltaTime();
-                Sprite playerSprite = player.getSprite();
+                float xMove = 1f * playerShip.getSpeed() * Gdx.graphics.getDeltaTime();
+                Sprite playerSprite = playerShip.getSprite();
                 if (!isOutScreen(playerSprite)){
                     playerSprite.translate(xMove,0);
                 }
@@ -473,7 +566,7 @@ public class UniverseManager extends InputEventSystem implements Disposable {
         cameraUtils.resizeViewport(width,height);
         hud.getStage().resize(width, height);
         starshipShooter.menuManager.resize(width, height);
-        if (starshipShooter.renderMenus){
+        if (starshipShooter.MENUS){
             starshipShooter.menuManager.resize(width, height);
         }
     }
@@ -508,7 +601,7 @@ public class UniverseManager extends InputEventSystem implements Disposable {
             //Converts the touch coordinates to world coordinates.
             Vector2 touchPoint = new Vector2(xTouchPixels,yTouchPixels);
             touchPoint = cameraUtils.getViewport().unproject(touchPoint);
-            Sprite sprite = player.getSprite();
+            Sprite sprite = playerShip.getSprite();
             Vector2 playerLocation = new Vector2(
                     sprite.getX()+sprite.getOriginX(),
                     sprite.getY()+sprite.getOriginY()
@@ -526,18 +619,17 @@ public class UniverseManager extends InputEventSystem implements Disposable {
 
 //                updateShipRotation(rotateDegrees);
 
-
                 //Calculates the speed values for xy.
-                float xMove = xTouchDifference / touchDistance * player.getSpeed() * Gdx.graphics.getDeltaTime();
-                float yMove = yTouchDifference / touchDistance * player.getSpeed() * Gdx.graphics.getDeltaTime();
+                float xMove = xTouchDifference / touchDistance * playerShip.getSpeed() * Gdx.graphics.getDeltaTime();
+                float yMove = yTouchDifference / touchDistance * playerShip.getSpeed() * Gdx.graphics.getDeltaTime();
                 //Moves the player toward the move position.
-                Sprite playerSprite = player.getSprite();
+                Sprite playerSprite = playerShip.getSprite();
                 if (!isOutScreen(playerSprite)){
                     playerSprite.translate(xMove,yMove);
                 }
             }
         }
-        updateSpriteScreen(player.getSprite());
+        updateSpriteScreen(playerShip.getSprite());
     }
 
     //Checks if the current sprite is out of the screen coordinates.
@@ -582,11 +674,11 @@ public class UniverseManager extends InputEventSystem implements Disposable {
 
     //rotates the ship with additional 270 degrees for the offset.
     private void updateShipRotation(float degrees){
-        player.getSprite().setRotation(degrees + 270);
+        playerShip.getSprite().setRotation(degrees + 270);
     }
 
-    public Starship getPlayer() {
-        return player;
+    public Starship getPlayerShip() {
+        return playerShip;
     }
 
     public boolean isCollisionTest(Circle bounds) {
@@ -601,7 +693,20 @@ public class UniverseManager extends InputEventSystem implements Disposable {
         return isGameOver;
     }
 
+    public void setGameOver(boolean gameOver) {
+        isGameOver = gameOver;
+    }
+
     public boolean isDebuggingMode() {
         return isDebuggingMode;
+    }
+
+    public int getScoreCounter() {
+        if (scoreCounter < SCORE) scoreCounter ++;
+        return scoreCounter;
+    }
+
+    public Player getPlayer() {
+        return player;
     }
 }

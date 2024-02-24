@@ -80,12 +80,14 @@ public class LanguageMenu extends MenuObject  {
         }
         languageList.setSelected(currentItem);
         scrollPane = new ScrollPane(languageList,skin);
+        ScrollPane.ScrollPaneStyle style = scrollPane.getStyle();
+        style.vScrollKnob.setMinWidth(40);
         scrollPane.setFadeScrollBars(false);
         addListEvents(languageList);
 
         root.add(exit).expandX().center().padTop(25f).width(80).height(80);
         root.row();
-        root.add(scrollPane).expand().center().width(470).height(450);
+        root.add(scrollPane).expand().center().width(400).height(450);
     }
 
     //Applies and renders the title menu.

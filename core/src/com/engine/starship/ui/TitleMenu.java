@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -17,14 +18,6 @@ public class TitleMenu extends MenuObject {
 
     private final MenuManager manager;
     private Stage stage;
-    private Table root;
-    private TextButton play;
-    private TextButton credits;
-    private Button language;
-    private TextButton quit;
-    private Label title;
-    private Label version;
-    private Label verse;
 
     public TitleMenu(MenuManager manager){
         this.manager = manager;
@@ -44,33 +37,46 @@ public class TitleMenu extends MenuObject {
                 StarshipShooter.getInstance().guiCamera.viewportHeight
         ));
         Gdx.input.setInputProcessor(stage);
-        root = new Table();
+        Table root = new Table();
         root.setFillParent(true);
         root.setDebug(false);
         stage.addActor(root);
         //Gets the style for the label.
         Label.LabelStyle labelStyle = new Label.LabelStyle();
         labelStyle.font = StarshipShooter.getInstance().gameAssets.getLocalization().getPixelFont();
-        title = new Label("Starship Shooter",labelStyle);
-        title.setFontScale(3);
-        title.setColor(Color.ORANGE);
+        Image image = new Image(GameAssets.starshipLabel.getInstance());
+        image.scaleBy(7);
 
-        version = new Label(Constants.VERSION,labelStyle);
+        Label version = new Label(Constants.VERSION, labelStyle);
 
-        verse = new Label("John 8:32",labelStyle);
+        Label verse = new Label("John 8:32", labelStyle);
 
-        play = new TextButton(GameAssets.Localization.literal("play","Play"), skin);
+        TextButton play = new TextButton(GameAssets.Localization.translate("play", "Play"), skin);
 
-        quit = new TextButton(GameAssets.Localization.literal("quit","Quit"),skin);
-
-        credits = new TextButton(GameAssets.Localization.literal("Credits","Credits"),skin);
+        TextButton quit = new TextButton(GameAssets.Localization.translate("quit", "Quit"), skin);
 
         //Loads image button.
-        language = new Button(skin.get("Globle", Button.ButtonStyle.class));
+        Button language = new Button(skin.get("Globle", Button.ButtonStyle.class));
+
+        //Creates the settings button.
+        Button settings = new Button(skin.get("settings", Button.ButtonStyle.class));
+
+        //Creates the inventory.
+        Button inventory = new Button(skin.get("inventory",Button.ButtonStyle.class));
+
+        //Creates the credits.
+        Button credit = new Button(skin.get("credits",Button.ButtonStyle.class));
+
+        MenuManager.onChange(settings,() ->{
+            //Action for when the settings button is activated.
+            GameAssets.hitSound.getInstance().play(0.2f);
+            setVisible(false);
+            manager.settingsMenu.setVisible(true);
+        });
 
         MenuManager.onChange(play,() ->{
             GameAssets.hitSound.getInstance().play(0.2f);
-            StarshipShooter.getInstance().renderMenus = false;
+            StarshipShooter.MENUS = false;
             StarshipShooter.getInstance().universeManager.reset();
             StarshipShooter.getInstance().isPressStart = true;
             manager.setScreen(manager.universeManager.hud.getStage());
@@ -84,22 +90,23 @@ public class TitleMenu extends MenuObject {
            manager.languageMenu.setVisible(true);
            this.isVisible = false;
         });
-        MenuManager.onChange(credits,() ->{
+        MenuManager.onChange(credit,() ->{
             GameAssets.hitSound.getInstance().play(0.2f);
             manager.creditsMenu.setVisible(true);
             this.isVisible = false;
         });
-
+        //Table layout.
         float tablePad = 100f;
-        root.add(title).expand().bottom().padLeft(tablePad).padTop(tablePad / 2);
+        root.add(image).expand().center().padRight(tablePad * 3.5f).padTop(tablePad);
         root.row();
-        root.add(play).expand().bottom().width(300).padLeft(tablePad);
+        root.add(play).expand().bottom().width(300).height(90).padLeft(tablePad);
+        root.add(inventory).width(100).height(100);
         root.row();
-        root.add(credits).expand().bottom().width(300).padLeft(tablePad);
-        root.row();
-        root.add(quit).expand().bottom().width(300).padLeft(tablePad);
+        root.add(quit).expand().bottom().width(300).height(90).padLeft(tablePad);
+        root.add(credit).width(100).height(100);
         root.row();
         root.add(language).expand().center().width(132).height(108).padLeft(tablePad);
+        root.add(settings).width(100).height(100);
         root.row();
         float sidePad = 25f;
         float bottomPad = 20f;
@@ -114,6 +121,7 @@ public class TitleMenu extends MenuObject {
         stage.act();
         stage.draw();
     }
+
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height,true);

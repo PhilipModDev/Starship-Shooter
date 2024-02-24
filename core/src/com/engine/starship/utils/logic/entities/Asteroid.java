@@ -12,20 +12,16 @@ import com.engine.starship.UniverseManager;
 import com.engine.starship.utils.GameAssets;
 
 public class Asteroid extends Entity {
-    private final Sprite target;
+    Sprite target;
     private float density = 0.2f;
-    private final Circle bounds;
+    public  Circle bounds;
     private boolean canMove = false;
+    private boolean canRotate = true;
     public static float SPEED = 5;
     public boolean isPowerUp = false;
     public Asteroid(int x, int y){
         isLiving = true;
-        if (UniverseManager.RANDOM_XS_128.nextBoolean()){
-            target = new Sprite(GameAssets.healthAsteroid.getInstance());
-            isPowerUp = true;
-        }else {
-            target = new Sprite(GameAssets.asteroid.getInstance());
-        }
+        target = new Sprite(GameAssets.asteroid.getInstance());
         target.setSize(1f,1f);
         target.setOrigin(target.getWidth()/2.0f,target.getHeight()/2.0f);
         target.setPosition(x,y);
@@ -47,6 +43,10 @@ public class Asteroid extends Entity {
         setDensity(this.density + density);
     }
 
+    public void setCanRotate(boolean canRotate) {
+        this.canRotate = canRotate;
+    }
+
     //Rotates the asteroids.
     public void rotateAsteroids(){
         float degrees = 50 * Gdx.graphics.getDeltaTime();
@@ -63,14 +63,27 @@ public class Asteroid extends Entity {
             if (entity instanceof Starship){
                 Starship starship = (Starship) entity;
                 UniverseManager manager = StarshipShooter.getInstance().universeManager;
-                starship.takeDamage(1);
+                if (this instanceof RogueAsteroid){
+                    starship.takeDamage(10);
+                } else if (this instanceof NomadAsteroid) {
+                    starship.takeDamage(8);
+                }else if (this instanceof SalusAsteroid) {
+                    SalusAsteroid salusAsteroid = (SalusAsteroid) this;
+                    if (!salusAsteroid.spawnHeart){
+                        starship.takeDamage(6);
+                    }else starship.addHealth(2);
+                }else {
+                    starship.takeDamage(6);
+                }
                 StarshipShooter.getInstance().universeManager.onHit(entity);
                 ParticleEffectPool.PooledEffect effect = manager.hitPoolEffect.obtain();
                 effect.setPosition(entity.position.x,entity.position.y);
                 manager.effects.add(effect);
             }
         }
-        rotateAsteroids();
+        if (canRotate){
+            rotateAsteroids();
+        }
     }
 
     @Override
