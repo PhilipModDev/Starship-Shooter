@@ -1,0 +1,54 @@
+[
+  {
+    "key" : "play",
+    "value" : "Jugar"
+  },
+  {
+    "key" : "gameOver",
+    "value" : "Juego terminado"
+  },
+  {
+    "key" : "pause",
+    "value" : "Pausa"
+  },
+  {
+    "key" : "New Score",
+    "value" : "Nueva puntuación"
+  },
+  {
+    "key" : "score",
+    "value" : "Puntaje"
+  },
+  {
+    "key" : "quit",
+    "value" : "Quit"
+  },
+  {
+    "key" : "resume",
+    "value" : "Abandonar"
+  },
+  {
+    "key" : "titleScreen",
+    "value" : "Pantalla de título"
+  },
+  {
+    "key" : "playAgain",
+    "value" : "¿Juega de nuevo?"
+  },
+  {
+    "key" : "kill",
+    "value" : "Puntuación de muertes"
+  },
+  {
+    "key" : "language",
+    "value" : "Idiomas"
+  },
+  {
+    "key" : "Difficulty",
+    "value" : "Dificultad"
+  },
+  {
+    "key" : "Credits",
+    "value" : "Créditos"
+  }
+]

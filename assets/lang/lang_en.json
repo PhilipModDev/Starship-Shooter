@@ -1,0 +1,50 @@
+[
+  {
+    "key" : "play",
+    "value" : "Play"
+  },
+  {
+    "key" : "gameOver",
+    "value" : "Game Over"
+  },
+  {
+    "key" : "pause",
+    "value" : "Pause"
+  },
+  {
+    "key" : "New Score",
+    "value" : "New Score"
+  },
+  {
+    "key" : "score",
+    "value" : "Score"
+  },
+  {
+    "key" : "quit",
+    "value" : "Quit"
+  },
+  {
+    "key" : "resume",
+    "value" : "Resume"
+  },
+  {
+    "key" : "titleScreen",
+    "value" : "Title Screen"
+  },
+  {
+    "key" : "playAgain",
+    "value" : "Play Again?"
+  },
+  {
+    "key" : "kill",
+    "value" : "Kill-Score"
+  },
+  {
+    "key" : "language",
+    "value" : "Languages"
+  },
+  {
+    "key" : "Credits",
+    "value" : "Credits"
+  }
+]

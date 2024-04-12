@@ -1,0 +1,117 @@
+{
+	"BitmapFont": {
+		"default": {
+			"file": "font/pixel.fnt",
+			"scaledSize": -1,
+			"markupEnabled": false,
+			"flip": false
+		}
+	},
+	"Color": {
+		"RGBA_0_243_255_255": {
+			"r": 0,
+			"g": 0.95505685,
+			"b": 1,
+			"a": 1
+		},
+		"RGBA_58_242_184_255": {
+			"r": 0.22745098,
+			"g": 0.9490196,
+			"b": 0.72156864,
+			"a": 1
+		}
+	},
+	"com.badlogic.gdx.scenes.scene2d.ui.Button$ButtonStyle": {
+		"default": {
+			"up": "pause_menu_button",
+			"down": "pause_menu_button",
+			"over": "hover_pause_menu_button"
+		},
+		"Globle": {
+			"up": "globe"
+		},
+		"x_menu_button": {
+			"up": "x"
+		},
+		"rocket_button": {
+			"up": "rocket",
+			"down": "rocket",
+			"over": "rocket"
+		},
+		"home_button": {
+			"up": "home",
+			"down": "home_over",
+			"over": "home_over"
+		},
+		"right_arrow": {
+			"up": "right_arrow",
+			"down": "right_arrow_over",
+			"over": "right_arrow_over"
+		},
+		"settings": {
+			"up": "settings",
+			"down": "settings",
+			"over": "settings"
+		},
+		"credits": {
+			"up": "credits",
+			"down": "credits",
+			"over": "credits"
+		},
+		"inventory": {
+			"up": "inventory",
+			"down": "inventory",
+			"over": "inventory"
+		},
+		"volume_button": {
+			"up": "audio_icon",
+			"down": "audio_icon",
+			"disabled": "mute_aduio"
+		},
+		"particles": {
+			"up": "particle_icon",
+			"disabled": "mute_particles"
+		},
+		"controls_button": {
+			"up": "controls_button",
+			"down": "controls_button",
+			"over": "controls_button"
+		},
+		"start": {
+			"up": "start"
+		},
+		"check": {
+			"up": "check"
+		},
+		"left_arrow": {
+			"up": "left_arrow",
+			"down": "left_arrow_over",
+			"over": "left_arrow_over"
+		}
+	},
+	"LabelStyle" :{
+		"default" : {
+			"font" : "default"
+		}
+	},
+	"com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle": {
+		"default": {
+			"font": "default",
+			"fontColorSelected": "RGBA_0_243_255_255",
+			"fontColorUnselected": "RGBA_58_242_184_255",
+			"selection": "selection"
+		}
+	},
+	"SliderStyle": {
+		"default-horizontal": {
+			"backgroundOver": "slide_bar_hover",
+			"background": "slide_bar",
+			"knob": "slider"
+		}
+	},
+	"com.badlogic.gdx.scenes.scene2d.ui.ScrollPane$ScrollPaneStyle": {
+		"default": {
+			"vScrollKnob": "scroll"
+		}
+	}
+}

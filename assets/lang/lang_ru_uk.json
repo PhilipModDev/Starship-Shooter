@@ -1,0 +1,54 @@
+[
+  {
+    "key" : "play",
+    "value" : "грати"
+  },
+  {
+    "key" : "gameOver",
+    "value" : "Гра завершена"
+  },
+  {
+    "key" : "pause",
+    "value" : "Пауза"
+  },
+  {
+    "key" : "New Score",
+    "value" : "Нова оцінка"
+  },
+  {
+    "key" : "score",
+    "value" : "Оцінка"
+  },
+  {
+    "key" : "quit",
+    "value" : "Вийти"
+  },
+  {
+    "key" : "resume",
+    "value" : "Резюме"
+  },
+  {
+    "key" : "titleScreen",
+    "value" : "Титульний екран"
+  },
+  {
+    "key" : "playAgain",
+    "value" : "Грай знову?"
+  },
+  {
+    "key" : "kill",
+    "value" : "Убити рахунок"
+  },
+  {
+    "key" : "language",
+    "value" : "Мови"
+  },
+  {
+  "key" : "Difficulty",
+  "value" : "Складність"
+  },
+  {
+    "key" : "Credits",
+    "value" : "Кредити"
+  }
+]

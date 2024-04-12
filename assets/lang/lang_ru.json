@@ -1,0 +1,54 @@
+[
+  {
+    "key" : "play",
+    "value" : "Играть"
+  },
+  {
+    "key" : "gameOver",
+    "value" : "Игра закончена"
+  },
+  {
+    "key" : "pause",
+    "value" : "Пауза"
+  },
+  {
+    "key" : "New Score",
+    "value" : "Новый счет"
+  },
+  {
+    "key" : "score",
+    "value" : "Счет"
+  },
+  {
+    "key" : "quit",
+    "value" : "Покидать"
+  },
+  {
+    "key" : "resume",
+    "value" : "Резюме"
+  },
+  {
+    "key" : "titleScreen",
+    "value" : "Титульный экран"
+  },
+  {
+    "key" : "playAgain",
+    "value" : "Играть снова?"
+  },
+  {
+    "key" : "kill",
+    "value" : "Оценка убийств"
+  },
+  {
+    "key" : "language",
+    "value" : "Языки"
+  },
+  {
+    "key" : "Difficulty",
+    "value" : "Сложность"
+  },
+  {
+    "key" : "Credits",
+    "value" : "Кредиты"
+  }
+]

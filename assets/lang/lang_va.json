@@ -1,0 +1,54 @@
+[
+  {
+    "key" : "play",
+    "value" : "Chơi"
+  },
+  {
+    "key" : "gameOver",
+    "value" : "Trò chơi kết thúc"
+  },
+  {
+    "key" : "pause",
+    "value" : "Tạm ngừng"
+  },
+  {
+    "key" : "New Score",
+    "value" : "Điểm mới"
+  },
+  {
+    "key" : "score",
+    "value" : "Điểm"
+  },
+  {
+    "key" : "quit",
+    "value" : "Từ bỏ"
+  },
+  {
+    "key" : "resume",
+    "value" : "Bản tóm tắt"
+  },
+  {
+    "key" : "titleScreen",
+    "value" : "Màn hình tiêu đề"
+  },
+  {
+    "key" : "playAgain",
+    "value" : "Chơi lại?"
+  },
+  {
+    "key" : "kill",
+    "value" : "Điểm tiêu diệt"
+  },
+  {
+    "key" : "language",
+    "value" : "Ngôn ngữ"
+  },
+  {
+    "key" : "Difficulty",
+    "value" : "Khó khăn"
+  },
+  {
+    "key" : "Credits",
+    "value" : "Tín dụng"
+  }
+]

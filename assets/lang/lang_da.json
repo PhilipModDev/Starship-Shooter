@@ -1,0 +1,54 @@
+[
+  {
+    "key" : "play",
+    "value" : "Spil"
+  },
+  {
+    "key" : "gameOver",
+    "value" : "Game Over"
+  },
+  {
+    "key" : "pause",
+    "value" : "Pause"
+  },
+  {
+    "key" : "New Score",
+    "value" : "Ny score"
+  },
+  {
+    "key" : "score",
+    "value" : "Score"
+  },
+  {
+    "key" : "quit",
+    "value" : "Afslut"
+  },
+  {
+    "key" : "resume",
+    "value" : "Genoptag"
+  },
+  {
+    "key" : "titleScreen",
+    "value" : "Titelskærm"
+  },
+  {
+    "key" : "playAgain",
+    "value" : "Spil igen?"
+  },
+  {
+    "key" : "kill",
+    "value" : "Kill-Score"
+  },
+  {
+    "key" : "language",
+    "value" : "Sprog"
+  },
+  {
+    "key" : "Difficulty",
+    "value" : "Vanskelighed"
+  },
+  {
+    "key" : "Credits",
+    "value" : "Credits"
+  }
+]

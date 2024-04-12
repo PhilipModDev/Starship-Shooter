@@ -1,0 +1,54 @@
+[
+  {
+    "key" : "play",
+    "value" : "Spielen"
+  },
+  {
+    "key" : "gameOver",
+    "value" : "Spielende"
+  },
+  {
+    "key" : "pause",
+    "value" : "Pausiere"
+  },
+  {
+    "key" : "New Score",
+    "value" : "Neue Partitur"
+  },
+  {
+    "key" : "score",
+    "value" : "Punktzahl"
+  },
+  {
+    "key" : "quit",
+    "value" : "Verlassen"
+  },
+  {
+    "key" : "resume",
+    "value" : "Lebenslauf"
+  },
+  {
+    "key" : "titleScreen",
+    "value" : "Titelbildschirm"
+  },
+  {
+    "key" : "playAgain",
+    "value" : "Erneut abspielen?"
+  },
+  {
+    "key" : "kill",
+    "value" : "Kill-Punktzahl"
+  },
+  {
+    "key" : "language",
+    "value" : "Sprache"
+  },
+  {
+    "key" : "Difficulty",
+    "value" : "Moeilijkheidsgraad"
+  },
+  {
+    "key" : "Credits",
+    "value" : "Credits"
+  }
+]

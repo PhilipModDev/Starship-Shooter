@@ -1,0 +1,54 @@
+[
+  {
+    "key" : "play",
+    "value" : "खेल"
+  },
+  {
+    "key" : "gameOver",
+    "value" : "खेल खत्म"
+  },
+  {
+    "key" : "pause",
+    "value" : "विराम"
+  },
+  {
+    "key" : "New Score",
+    "value" : "नया स्कोर"
+  },
+  {
+    "key" : "score",
+    "value" : "अंक"
+  },
+  {
+    "key" : "quit",
+    "value" : "छोड़ना"
+  },
+  {
+    "key" : "resume",
+    "value" : "फिर शुरू करना"
+  },
+  {
+    "key" : "titleScreen",
+    "value" : "शीर्षक स्क्रीन"
+  },
+  {
+    "key" : "playAgain",
+    "value" : "फिर से चालू करें?"
+  },
+  {
+    "key" : "kill",
+    "value" : "किल-स्कोर"
+  },
+  {
+    "key" : "language",
+    "value" : "बोली"
+  },
+  {
+    "key" : "Difficulty",
+    "value" : "कठिनाई"
+  },
+  {
+    "key" : "Credits",
+    "value" : "क्रेडिट"
+  }
+]

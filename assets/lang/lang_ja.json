@@ -1,0 +1,54 @@
+[
+  {
+    "key" : "play",
+    "value" : "遊ぶ"
+  },
+  {
+    "key" : "gameOver",
+    "value" : "ゲームオーバー"
+  },
+  {
+    "key" : "pause",
+    "value" : "一時停止"
+  },
+  {
+    "key" : "New Score",
+    "value" : "新しいスコア"
+  },
+  {
+    "key" : "score",
+    "value" : "スコア"
+  },
+  {
+    "key" : "quit",
+    "value" : "やめる"
+  },
+  {
+    "key" : "resume",
+    "value" : "再開する"
+  },
+  {
+    "key" : "titleScreen",
+    "value" : "タイトル画面"
+  },
+  {
+    "key" : "playAgain",
+    "value" : "再びプレー？"
+  },
+  {
+    "key" : "kill",
+    "value" : "キルスコア"
+  },
+  {
+    "key" : "language",
+    "value" : "言語"
+  },
+  {
+    "key" : "Difficulty",
+    "value" : "困難"
+  },
+  {
+    "key" : "Credits",
+    "value" : "クレジット"
+  }
+]

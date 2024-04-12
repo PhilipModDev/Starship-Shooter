@@ -1,0 +1,54 @@
+[
+  {
+    "key" : "play",
+    "value" : "玩"
+  },
+  {
+    "key" : "gameOver",
+    "value" : "遊戲結束"
+  },
+  {
+    "key" : "pause",
+    "value" : "暫停"
+  },
+  {
+    "key" : "New Score",
+    "value" : "新分數"
+  },
+  {
+    "key" : "score",
+    "value" : "分數"
+  },
+  {
+    "key" : "quit",
+    "value" : "辭職"
+  },
+  {
+    "key" : "resume",
+    "value" : "恢復"
+  },
+  {
+    "key" : "titleScreen",
+    "value" : "標題畫面"
+  },
+  {
+    "key" : "playAgain",
+    "value" : "再玩一次？"
+  },
+  {
+    "key" : "kill",
+    "value" : "死亡"
+  },
+  {
+    "key" : "language",
+    "value" : "語言"
+  },
+  {
+    "key" : "Difficulty",
+    "value" : "困难"
+  },
+  {
+    "key" : "Credits",
+    "value" : "製作人員"
+  }
+]
