@@ -717,7 +717,6 @@ public class UniverseManager extends EventSystem implements Disposable {
         }
     }
 
-
     //Checks if the touch was on a UI component.
     private boolean isUITouch(float x,float y){
         float height = 3;
