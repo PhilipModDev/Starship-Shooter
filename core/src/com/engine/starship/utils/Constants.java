@@ -24,5 +24,5 @@ public class Constants {
     public static final String VIETNAMESE_FONT = "ui/font/vietnamese/vietnamese_fonts.fnt";
     public static final String RESOURCE_LOCATION = "data/";
     //Defines the application version.
-    public static final String VERSION = "v1.1.12";
+    public static final String VERSION = "v1.2.12";
 }

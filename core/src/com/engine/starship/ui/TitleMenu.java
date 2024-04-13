@@ -1,7 +1,9 @@
 package com.engine.starship.ui;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
@@ -12,6 +14,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.engine.starship.StarshipShooter;
+import com.engine.starship.UniverseManager;
+import com.engine.starship.ui.component.XMenuButton;
 import com.engine.starship.utils.Constants;
 import com.engine.starship.utils.GameAssets;
 
@@ -22,6 +26,7 @@ public class TitleMenu extends MenuObject {
     private final float startBlinkDelay = 0.3f;
     private float startDelaySum = 0f;
     private Button startLabel;
+    private XMenuButton xMenuButton;
     private final Camera guiCamera = StarshipShooter.getInstance().guiCamera;
 
     public TitleMenu(MenuManager manager){
@@ -73,6 +78,12 @@ public class TitleMenu extends MenuObject {
         //Creates the credits.
         Button credit = new Button(skin.get("credits",Button.ButtonStyle.class));
 
+        //Creates the x menu button of on desktop.
+        if (UniverseManager.checkAppType && Gdx.app.getType() == Application.ApplicationType.Desktop){
+            xMenuButton = new XMenuButton();
+            xMenuButton.setBounds(60,guiCamera.viewportHeight - 40);
+        }
+
         MenuManager.onChange(settings,() ->{
             //Action for when the settings button is activated.
             GameAssets.hitSound.getInstance().play(0.2f);
@@ -117,6 +128,15 @@ public class TitleMenu extends MenuObject {
         stage.getViewport().apply();
         stage.act();
         stage.draw();
+        //Renders only if on desktop.
+        if (UniverseManager.checkAppType && Gdx.app.getType() == Application.ApplicationType.Desktop){
+            Batch batch = stage.getBatch();
+            batch.begin();
+            xMenuButton.render(batch);
+            batch.end();
+            checkEscapeButtonCollision();
+        }
+
         startBlink();
         checkStartCollision();
     }
@@ -164,6 +184,20 @@ public class TitleMenu extends MenuObject {
                 manager.setScreen(manager.universeManager.hud.getStage());
 
             }
+        }
+    }
+
+    private void checkEscapeButtonCollision() {
+        if (!Gdx.input.isTouched(0)) return;
+        Vector2 touch = new Vector2();
+        float x = Gdx.input.getX();
+        float y = Gdx.input.getY();
+        touch.set(x, y);
+
+        touch = stage.getViewport().unproject(touch);
+
+        if (xMenuButton.xSprite.getBoundingRectangle().contains(touch.x,touch.y)) {
+           Gdx.app.exit();
         }
     }
 }

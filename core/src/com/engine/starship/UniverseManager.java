@@ -3,7 +3,6 @@ package com.engine.starship;
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -16,7 +15,6 @@ import com.badlogic.gdx.graphics.profiling.GLProfiler;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.RandomXS128;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Pool;
@@ -58,16 +56,19 @@ public class UniverseManager extends EventSystem implements Disposable {
     private Sprite worldBackground;
     private boolean isObjectsLoaded = false;
     public boolean isDebuggingMode = false;
+    public static boolean checkAppType = true;
     private boolean isGameOver = false;
     private boolean isGameStart;
     public boolean fireBullet = false;
     public boolean autoFire = true;
     public boolean particles = true;
     public boolean cancelPlayerMovement = false;
+    private boolean renderRocketEffects = false;
     public static int SCORE = 0;
     public int collectedGems = 0;
     private int gemCounter = 0;
     private int scoreCounter = 0;
+    private float rocketCoolDownCounter = 0;
     private ShapeRenderer renderer;
     private Viewport viewport;
     public Level level;
@@ -91,6 +92,7 @@ public class UniverseManager extends EventSystem implements Disposable {
     public ParticleEffectPool pointPoolEffect;
     public ParticleEffectPool uraniumGemPoolEffect;
     private ParticleEffectPool.PooledEffect rocketEffect;
+    private ParticleEffectPool.PooledEffect playerRocketEffect;
 
     public UniverseManager(StarshipShooter starshipShooter){
         this.starshipShooter = starshipShooter;
@@ -161,10 +163,13 @@ public class UniverseManager extends EventSystem implements Disposable {
         worldBackground.setSize(Constants.WORLD_SIZE_X, Constants.WORLD_SIZE_Y);
         worldBackground.setOrigin(Gdx.graphics.getWidth()/2.0f,Gdx.graphics.getHeight()/2.0f);
         isObjectsLoaded = true;
-
+        //Init rocket effect.
         rocketEffect = rocketPoolEffect.obtain();
-        rocketEffect.setPosition(playerShip.position.x, playerShip.position.y);
         effects.add(rocketEffect);
+        //Init engine rocket effect.
+        playerRocketEffect = rocketPoolEffect.obtain();
+        playerRocketEffect.setPosition(playerShip.position.x, playerShip.position.y);
+        effects.add(playerRocketEffect);
         hud.init();
     }
 
@@ -224,6 +229,9 @@ public class UniverseManager extends EventSystem implements Disposable {
 
                   if (bullet instanceof Rocket){
                       if (bullet.isLiving){
+                          if (particles){
+                              rocketEffect.setPosition(bullet.position.x + 0.3f,bullet.position.y + 0.3f);
+                          }
                           if (!StarshipShooter.GAME_PAUSE) bullet.update();
                           bullet.render(batch);
                       } else {
@@ -254,6 +262,8 @@ public class UniverseManager extends EventSystem implements Disposable {
           if (!effects.isEmpty() && particles){
               for (int i = 0; i < effects.size; i++) {
                   ParticleEffectPool.PooledEffect effect = effects.get(i);
+                  //Tells don't render rocket effects. Because we don't want them, lol.
+                  if (effect == rocketEffect && !renderRocketEffects) continue;
                   effect.draw(batch,delta);
                   if (effect.isComplete()){
                       effect.free();
@@ -261,7 +271,7 @@ public class UniverseManager extends EventSystem implements Disposable {
                   }
               }
           }
-          rocketEffect.setPosition(playerShip.position.x, playerShip.position.y);
+          playerRocketEffect.setPosition(playerShip.position.x, playerShip.position.y);
           playerShip.render(batch);
           batch.end();
       }
@@ -379,6 +389,11 @@ public class UniverseManager extends EventSystem implements Disposable {
             scoreParser.updateHighScore();
             return;
         }
+        //Rocket cool down counter and checker.
+        float maxRocketCoolDown = 2;
+        if (rocketCoolDownCounter != 0 && rocketCoolDownCounter < maxRocketCoolDown){
+            rocketCoolDownCounter += 1 * Gdx.graphics.getDeltaTime();
+        } else rocketCoolDownCounter = 0;
 
         fireBullet();
         handleInputs();
@@ -405,11 +420,7 @@ public class UniverseManager extends EventSystem implements Disposable {
     private void fireBullet(){
         //Calls when the user fires a rocket.
         if (Gdx.input.isKeyJustPressed(Input.Keys.R)){
-            Rocket rocket = rocketPool.obtain();
-            rocket.init(playerShip.position.x, playerShip.position.y);
-            bullets.add(rocket);
-            onShoot();
-            playerShip.isAttackUse = true;
+            firePlayerRocket();
         }
 
 
@@ -478,11 +489,19 @@ public class UniverseManager extends EventSystem implements Disposable {
     }
 
     public void firePlayerRocket(){
+        if (rocketCoolDownCounter != 0) return;
+        //Init for rocket effect rendering.
+        if (!renderRocketEffects) renderRocketEffects = true;
+
         Rocket rocket = rocketPool.obtain();
         rocket.init(playerShip.position.x, playerShip.position.y);
         rocket.fireRight = true;
         bullets.add(rocket);
         onShoot();
+        playerShip.isAttackUse = true;
+        rocketCoolDownCounter = 1;
+
+
     }
 
 
@@ -490,7 +509,8 @@ public class UniverseManager extends EventSystem implements Disposable {
         for (Bullet bullet : bullets) {
             Vector2 pos = bullet.getPosition();
             for (Asteroid asteroid: asteroids) {
-              if (asteroid.getBounds().contains(pos)) {
+                Rocket rocket = bullet instanceof Rocket ? (Rocket) bullet : null;
+              if (asteroid.getBounds().contains(pos) || rocket != null && rocket.hitBounds(asteroid.position.x,asteroid.position.y)) {
                   if (particles){
                       ParticleEffectPool.PooledEffect effect = hitPoolEffect.obtain();
                       effect.setPosition(bullet.position.x,bullet.position.y);
@@ -523,7 +543,8 @@ public class UniverseManager extends EventSystem implements Disposable {
             //If the bullet wasn't fired by enemy.
             if (!bullet.isEnemy) {
                 for (AlienStarship alienStarship: aliens) {
-                    if (alienStarship.getBounds().contains(pos)) {
+                    Rocket rocket = bullet instanceof Rocket ? (Rocket) bullet : null;
+                    if (alienStarship.getBounds().contains(pos) || rocket != null && rocket.hitBounds(alienStarship.position.x,alienStarship.position.y)) {
                         if (particles){
                             ParticleEffectPool.PooledEffect effect = hitPoolEffect.obtain();
                             effect.setPosition(bullet.position.x,bullet.position.y);
@@ -575,43 +596,6 @@ public class UniverseManager extends EventSystem implements Disposable {
     private void handleInputs(){
         if (Gdx.app.getType() == Application.ApplicationType.Desktop){
             //Keyboard controls.
-            //Zoom in-out
-
-            if (Gdx.input.isKeyJustPressed(Input.Keys.I)){
-                cameraUtils.addZoom(-0.5f);
-            }
-            if (Gdx.input.isKeyJustPressed(Input.Keys.O)){
-                cameraUtils.addZoom(0.5f);
-            }
-
-            if (Gdx.input.isKeyPressed(Input.Keys.W)){
-                float yMove = 1f * playerShip.getSpeed() * Gdx.graphics.getDeltaTime();
-                Sprite playerSprite = playerShip.getSprite();
-                if (!isOutScreen(playerSprite)){
-                    playerSprite.translate(0,yMove);
-                }
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.S)){
-                float yMove = 1f * playerShip.getSpeed() * Gdx.graphics.getDeltaTime();
-                Sprite playerSprite = playerShip.getSprite();
-                if (!isOutScreen(playerSprite)){
-                    playerSprite.translate(0,-yMove);
-                }
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.A)){
-                float xMove = 1f * playerShip.getSpeed() * Gdx.graphics.getDeltaTime();
-                Sprite playerSprite = playerShip.getSprite();
-                if (!isOutScreen(playerSprite)){
-                    playerSprite.translate(-xMove,0);
-                }
-            }
-            if (Gdx.input.isKeyPressed(Input.Keys.D)){
-                float xMove = 1f * playerShip.getSpeed() * Gdx.graphics.getDeltaTime();
-                Sprite playerSprite = playerShip.getSprite();
-                if (!isOutScreen(playerSprite)){
-                    playerSprite.translate(xMove,0);
-                }
-            }
             //handles fullscreen events.
             if (Gdx.input.isKeyJustPressed(Input.Keys.F11) && Gdx.graphics.isFullscreen() ){
                 Gdx.graphics.setWindowedMode(1080,720);
@@ -719,6 +703,7 @@ public class UniverseManager extends EventSystem implements Disposable {
 
     //Checks if the touch was on a UI component.
     private boolean isUITouch(float x,float y){
+        if (checkAppType && Gdx.app.getType() == Application.ApplicationType.Desktop) return false;
         float height = 3;
         float ry = 0;
         if (y <= ry + height && y >= ry - height){
@@ -730,6 +715,7 @@ public class UniverseManager extends EventSystem implements Disposable {
     }
 
     public boolean xyzOutBounds(float x, float y){
+        if (checkAppType && Gdx.app.getType() == Application.ApplicationType.Desktop) return false;
         if (x > cameraUtils.viewportWidth) return true;
         if (x <=  -0) return true;
         if (y >= cameraUtils.viewportHeight - 1) return true;

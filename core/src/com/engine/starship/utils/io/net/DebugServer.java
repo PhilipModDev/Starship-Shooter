@@ -32,8 +32,7 @@ public class DebugServer {
     }
 
     public static void msgServer(){
-        try {
-         Socket socket = new Socket("192.168.1.10",PORT);
+        try (Socket socket = new Socket("192.168.1.10",PORT)) {
          if (socket.isConnected()){
              OutputStream stream = socket.getOutputStream();
              stream.write("hi".getBytes());

@@ -9,6 +9,7 @@ public class Rocket extends Bullet {
 
     public Sprite sprite;
     public static final int SPEED = 10;
+    public static final int boundSize = 1;
 
     public Rocket(float x, float y){
         super(x, y);
@@ -24,6 +25,13 @@ public class Rocket extends Bullet {
     public void update() {
         position.add(SPEED * Gdx.graphics.getDeltaTime(),0);
         sprite.setPosition(position.x, position.y);
+    }
+
+    public boolean hitBounds(float x,float y){
+        if (x <= position.x + boundSize && x >= position.x - boundSize){
+            return y <= position.y + boundSize && y >= position.y - boundSize;
+        }
+       return false;
     }
 
     @Override

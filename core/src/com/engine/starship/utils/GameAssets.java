@@ -54,6 +54,7 @@ public class GameAssets implements Disposable {
     public static RegistryAsset<TextureAtlas.AtlasRegion> highScoreLabel;
     public static RegistryAsset<TextureAtlas.AtlasRegion> audioIcon;
     public static RegistryAsset<TextureAtlas.AtlasRegion> particleIcon;
+    public static RegistryAsset<TextureAtlas.AtlasRegion> xIcon;
     public static RegistryAsset<TextureAtlas.AtlasRegion> uraniumGem;
     public static RegistryAsset<Skin> uiSkin;
     public static RegistryAsset<Sound> hitSound;
@@ -128,6 +129,7 @@ public class GameAssets implements Disposable {
         tierThreeStarShip = new RegistryAsset<>(findRegion("gray_starship"));
         tierFourStarShip = new RegistryAsset<>(findRegion("dark_gray_starship"));
         rocket = new RegistryAsset<>(findRegion("rocket"));
+        xIcon = new RegistryAsset<>(findRegion("x"));
         loadConfigs();
     }
 

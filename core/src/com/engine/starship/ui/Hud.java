@@ -1,5 +1,6 @@
 package com.engine.starship.ui;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Camera;
@@ -169,6 +170,9 @@ public class Hud implements Disposable {
             //Menu text button.
             menu = new Button(skin);
             rocket = new Button(skin.get("rocket_button", Button.ButtonStyle.class));
+            if (UniverseManager.checkAppType && Gdx.app.getType() == Application.ApplicationType.Desktop) {
+                rocket.setVisible(false);
+            }
             //Play Again text button.
             playAgain = new Button(skin.get("right_arrow",Button.ButtonStyle.class));
             playAgain.setVisible(false);
@@ -246,6 +250,9 @@ public class Hud implements Disposable {
             //Display game over label.
             if (universeManager.isGameOver()){
                 gameOverLabel.draw(batch,guiCamera.viewportWidth/2.0f,(guiCamera.viewportHeight/2.0f) + 100);
+            }
+            if (UniverseManager.checkAppType && Gdx.app.getType() == Application.ApplicationType.Desktop) {
+                rocket.setVisible(false);
             }
         }
 

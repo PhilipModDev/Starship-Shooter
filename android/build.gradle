@@ -24,8 +24,8 @@ android {
         applicationId "com.engine.starship"
         minSdkVersion 17
         targetSdkVersion 33
-        versionCode 23
-        versionName "1.0.12"
+        versionCode 25
+        versionName "1.2.12"
         multiDexEnabled true
     }
     buildTypes {

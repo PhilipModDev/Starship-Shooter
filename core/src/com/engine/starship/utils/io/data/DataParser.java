@@ -47,6 +47,7 @@ public class DataParser {
             if (starShipData.isEquip) player.updateStarShipData(starShipData);
         }
     }
+
     //Writes the data.
     public void savePlayerData(PlayerData data) throws IOException {
         FileHandle fileHandle = Gdx.files.local(Constants.RESOURCE_LOCATION + playerData);
